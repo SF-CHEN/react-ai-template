@@ -96,36 +96,7 @@ Lucide 图标（IconLucideXxx）
 </Button>
 ```
 
-不需要写：
-
-```tsx
-import { Button } from '@/components/ui/button'
-import { Plus } from 'lucide-react'
-```
-
-图标统一使用 `IconLucideXxx` 命名，例如：
-
-```tsx
-<IconLucideSearch />
-<IconLucidePencil />
-<IconLucideTrash2 />
-<IconLucideUsers />
-```
-
-模板只启用 Lucide 图标集，实际使用到的图标才会进入最终 Bundle。
-
-以下内容仍保持显式导入：
-
-- `api`
-- 页面和业务组件
-- 页面业务 Query / Hook
-- Zustand Store
-- 类型
-- 工具函数
-- `components/common` 下的跨页面组件
-- 其他第三方业务库
-
-`src/auto-imports.d.ts` 由插件维护并提交到仓库，保证首次克隆后也能直接进行 TypeScript 检查。
+业务 API、页面组件、业务 Query、Store、Utils、业务类型和 `components/common` 仍然保持显式 import，避免代码来源难以追踪。
 
 ## 开始使用
 
@@ -163,12 +134,31 @@ pnpm build
 
 ## AI 开发规范
 
-开始生成代码前优先阅读：
+根目录 `AGENTS.md` 保存长期强制约定；`skills/` 只保存专项规则，避免把所有细节堆在一份文档里。
 
-- `AGENTS.md`：项目总规范
-- `skills/react-project/SKILL.md`：目录和代码生成规则
-- `skills/react-performance/SKILL.md`：React 性能规则
+```text
+skills/
+├── react-project/
+│   └── SKILL.md       页面、组件、表单、目录结构
+├── react-data/
+│   └── SKILL.md       API、TanStack Query、Zustand、URL 状态
+├── typescript/
+│   └── SKILL.md       TypeScript 类型、DTO、Zod、泛型
+└── react-performance/
+    ├── SKILL.md       React 性能优化入口
+    └── rules/         具体性能规则
+```
+
+建议 AI 按任务读取，而不是一次性加载全部 Skill：
+
+- 页面、组件、表单、路由 → `skills/react-project/SKILL.md`
+- API、Query、Mutation、状态管理 → `skills/react-data/SKILL.md`
+- TypeScript 类型设计 → `skills/typescript/SKILL.md`
+- 性能问题 → `skills/react-performance/SKILL.md`
+
+另外可阅读：
+
 - `docs/architecture.md`：目录设计说明
-- `docs/ai-development.md`：AI 开发提示词建议
+- `docs/ai-development.md`：AI 开发提示词和 Skill 路由
 
 项目文档、代码注释和 Git 提交说明默认使用中文。

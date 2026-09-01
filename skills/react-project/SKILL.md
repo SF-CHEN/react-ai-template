@@ -1,62 +1,145 @@
 ---
-name: react-project-conventions
-description: 本 React + TypeScript + Vite 模板的目录与实现规范。新增页面、接口、表单、表格、路由或公共组件时使用。
+name: react-project
+description: 当前 React + TypeScript + Vite 模板的页面、目录、组件、表单和 UI 实现规范。新增或重构页面、组件、路由、表单、布局时使用。
 ---
 
-# React 项目开发规范 Skill
+# React 项目实现 Skill
 
-## 快速决策
+## 目标
 
-| 需求 | 放置位置 |
+生成 **容易找到、容易理解、容易继续维护** 的 React 代码，而不是追求目录层级或抽象数量。
+
+## 快速放置决策
+
+| 内容 | 默认位置 |
 |---|---|
 | 后端接口 | `src/api/<name>.ts` |
 | 路由页面 | `src/pages/<name>/index.tsx` |
-| 页面专用组件 | 页面目录同级，复杂后再放 `components/` |
-| 服务端状态 | 页面附近的 `<name>.query.ts` |
-| 表单校验 | 页面附近的 `<name>.schema.ts` |
-| 全局客户端状态 | Zustand / `src/store` |
-| 基础 UI | `src/components/ui`，允许自动导入 |
-| 跨页面组件 | `src/components/common`，保持显式导入 |
-| 通用 Hook | `src/hooks`，允许自动导入 |
-| 图标 | `IconLucideXxx`，自动导入 |
+| 页面专用组件 | 当前页面目录同级 |
+| 页面复杂后的组件 | `pages/<name>/components/` |
+| 子页面 | `pages/<name>/<sub-page>/index.tsx` |
+| 表单 Schema | 页面附近 `<name>.schema.ts` |
+| 页面 Query | 页面附近 `<name>.query.ts` |
+| 基础 UI | `src/components/ui` |
+| 跨页面通用组件 | `src/components/common` |
+| 跨页面通用 Hook | `src/hooks` |
+| 全局客户端状态 | `src/store` |
 
-## 默认结构
+## 页面结构
 
-简单页面优先：
+简单页面默认：
 
 ```text
-pages/example/
+pages/user/
 ├── index.tsx
-├── ExampleTable.tsx
-├── ExampleFormDialog.tsx
-├── example.query.ts
-└── example.schema.ts
+├── UserTable.tsx
+├── UserFormDialog.tsx
+├── user.query.ts
+└── user.schema.ts
 ```
 
-只创建真正需要的文件，不要默认生成多层 `api / hooks / query / schemas / types / components / pages` 目录。
+不要默认生成：
 
-## 复杂后再拆
+```text
+components/
+hooks/
+query/
+schemas/
+types/
+constants/
+pages/
+```
 
-只有文件明显增多或存在明确职责边界时，再增加 `components/`、`hooks/`、`detail/`、`settings/` 等目录。目录应该降低复杂度，而不是制造复杂度。
+只有当文件明显增多或职责边界已经形成时，再演化为：
 
-## API 规则
+```text
+pages/evaluation/
+├── index.tsx
+├── detail/
+│   └── index.tsx
+├── components/
+│   ├── EvaluationTable.tsx
+│   └── EvaluationForm.tsx
+├── evaluation.query.ts
+└── evaluation.schema.ts
+```
 
-所有接口统一放在 `src/api`。
+## 页面职责
 
-接口文件可以包含与接口直接相关的请求/响应类型。页面通过 TanStack Query 调用接口函数，页面组件不直接调用 Axios。
+`index.tsx` 优先负责：
 
-## 自动导入规则
+- 页面整体布局
+- 查询条件和 URL 状态
+- 业务流程编排
+- Dialog / Drawer 开关
+- 组合页面专用组件
 
-项目使用 `unplugin-auto-import + unplugin-icons`。
+不要把大型表格列定义、复杂表单字段、重型图表配置全部堆进页面入口。
 
-可以直接使用而不写 import：
+## 组件拆分判断
+
+适合拆组件：
+
+- 有独立 UI 边界
+- 有独立 Props
+- 在页面内重复使用
+- 逻辑明显独立
+- 拆出后页面更容易顺序阅读
+
+不适合拆组件：
+
+- 只有几行 JSX
+- 只为了减少文件行数
+- 拆出后必须传大量零碎 props
+- 组件名字难以描述真实职责
+
+## React 规则
+
+- 派生值直接计算，不使用 `useEffect` 同步第二份 state。
+- 交互行为放事件处理函数。
+- 不机械添加 memo。
+- 不在组件内部声明 React 组件。
+- 动态列表使用稳定业务 ID 作为 key。
+- Props 不可变，不直接修改数组或对象 state。
+
+## 表单
+
+复杂表单统一 React Hook Form + Zod。
+
+```ts
+export const userFormSchema = z.object({
+  username: z.string().min(2),
+  status: z.enum(['enabled', 'disabled']),
+})
+
+export type UserFormData = z.infer<typeof userFormSchema>
+```
+
+如果表单字段与接口入参一致：
+
+```ts
+await createUser(values)
+```
+
+不要重新逐字段复制：
+
+```ts
+await createUser({
+  username: values.username,
+  status: values.status,
+})
+```
+
+除非接口 DTO 确实不同。
+
+## 自动导入
+
+以下直接使用，不手写 import：
 
 - React 常用 API
-- `src/components/ui` 中的基础 UI 组件
-- `src/hooks` 中的通用 Hook
-- Lucide 图标，统一写成 `IconLucideXxx`
-
-例如：
+- `components/ui` 基础组件
+- `src/hooks` 通用 Hook
+- Lucide 图标：`IconLucideXxx`
 
 ```tsx
 <Button>
@@ -65,21 +148,14 @@ pages/example/
 </Button>
 ```
 
-不要生成 `lucide-react` import。默认只启用 Lucide 图标集合，不要自行增加其他图标集合。
+业务 API、业务 Query、页面组件、Store、Utils、业务类型和 `components/common` 保持显式 import。
 
-业务相关内容保持显式 import，包括 API、页面组件、业务 Query、Store、工具函数、类型和 `components/common`。
+## 生成流程
 
-不要扩大自动扫描范围到整个 `src`，避免代码来源变得不可追踪。
-
-## 生成原则
-
-1. 先阅读目标页面附近代码，再决定结构。
-2. 简单业务保持扁平。
-3. 复杂度出现后再渐进拆分。
-4. 基础 UI、React API 和 Lucide 图标优先使用自动导入。
-5. 业务依赖保持显式 import。
-6. 每份状态只保留一个真实来源。
-7. 优先直接、容易阅读的代码，不做无意义通用抽象。
-8. 保持现有命名、路径别名和技术栈。
-9. 非显而易见的决策使用中文 Why 注释。
-10. 现有依赖能解决问题时，不新增同职责依赖。
+1. 先阅读目标页面附近的现有文件。
+2. 判断这是简单页面还是已经进入复杂页面阶段。
+3. 先复用现有 UI、Hook、工具和技术栈。
+4. 创建最少必要文件。
+5. 业务流程优先写清楚，再考虑抽象。
+6. 非显而易见的设计决策添加中文 Why 注释。
+7. 完成后检查是否无意义增加目录或公共抽象。
