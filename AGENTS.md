@@ -35,6 +35,7 @@
 | 新增页面、组件、表单、路由、目录调整 | `skills/react-project/SKILL.md` |
 | API、TanStack Query、Zustand、URL 状态 | `skills/react-data/SKILL.md` |
 | TypeScript 类型设计、DTO、Zod 推导、泛型 | `skills/typescript/SKILL.md` |
+| 业务逻辑、复杂流程、数据转换、关键代码注释 | `skills/code-comments/SKILL.md` |
 | 性能分析、网络瀑布、重渲染、Bundle | `skills/react-performance/SKILL.md` |
 
 Skill 是专项指导，`AGENTS.md` 是项目长期强制约定。
@@ -179,18 +180,67 @@ API 规则：
 - 常量：语义清晰即可；真正全局常量可使用大写下划线。
 - 文件名与当前目录保持一致，不为了形式统一做无意义重命名。
 
-## 10. 注释与文档
+## 10. 代码注释与文档
 
-项目文档和代码注释默认使用中文，技术名词和代码标识符保留英文。
+项目**需要代码注释**。人工和 AI 生成的注释默认使用中文，技术名词和代码标识符保留英文。
 
-注释原则：
+AI 新增或重构代码时，应主动检查是否需要补充注释，而不是默认不写。
 
-- 注释重点解释 **Why**：设计原因、约束、兼容性、业务边界、容易误改的点。
-- 不给每个变量、每个函数机械添加注释。
-- 简单函数不强制 JSDoc。
-- 不添加 `@since`、修改时间、作者等容易过期的元数据。
-- 不要求每个源文件添加固定文件头。
-- 不要求每个目录创建 CLAUDE.md / README.md。
+以下场景应优先添加中文注释：
+
+- 多步骤业务流程和关键流程节点
+- 非直观的状态变化或状态联动
+- 特殊业务规则、边界条件和兜底逻辑
+- API / 表单 / 后端数据之间的数据转换
+- TanStack Query 缓存失效、预取、乐观更新等非直观行为
+- `useEffect`、`useRef`、缓存、懒加载等存在明确使用原因
+- 浏览器兼容、第三方库限制或框架约束
+- 性能优化和特殊实现取舍
+- 正则、复杂计算、复杂条件判断
+- 临时兼容方案和容易被误删、误改的代码
+
+注释应帮助开发者理解“这段代码在业务流程中做什么，以及为什么这样做”。其中 **Why 注释优先级最高**。
+
+例如：
+
+```ts
+useEffect(() => {
+  if (!open) return
+
+  // React Hook Form 只在首次初始化 defaultValues，切换编辑对象时需要主动 reset
+  form.reset(getDefaultValues(user))
+}, [form, open, user])
+```
+
+复杂业务流程可以使用阶段性注释：
+
+```ts
+// 编辑时更新当前记录；新增时直接创建新记录
+if (editingUser) {
+  await updateMutation.mutateAsync({ id: editingUser.id, input: values })
+} else {
+  await createMutation.mutateAsync(values)
+}
+
+// 请求成功后清空编辑态，避免下次新增残留上一次的数据
+setEditingUser(null)
+```
+
+不要写只重复代码表面含义的注释，例如：
+
+```ts
+// 设置 loading 为 true
+setLoading(true)
+
+// 删除用户
+deleteUser(id)
+```
+
+JSDoc 不要求覆盖每个函数，但公共 Hook、公共工具函数、重要公共组件或参数语义不明显的 API 可以使用 JSDoc。
+
+不添加 `@since`、修改时间、作者等容易过期的元数据；不要求固定文件头，也不要求每个目录创建 CLAUDE.md / README.md。
+
+详细规则见 `skills/code-comments/SKILL.md`。
 
 只有架构、公共使用方式、重要约定发生变化时，才同步更新 README / docs / Skill。
 
@@ -246,7 +296,8 @@ API 规则：
 - 复杂转换直接塞 JSX
 - 动态列表有稳定 ID 时仍使用数组索引作为 key
 - 直接修改 props/state
-- 每个函数和变量都生成解释代码表面的注释
+- 完全不给复杂业务逻辑写注释
+- 每个变量、每行代码都生成解释代码表面的废话注释
 - 每个目录创建一份同步维护文档
 - `lucide-react` 显式 import
 
@@ -267,6 +318,7 @@ pnpm build
 - API 与状态归属正确
 - 没有重复类型
 - 自动导入规则正确
-- 新增注释是中文 Why 注释
+- 复杂业务流程、特殊约束、数据转换等关键位置已有必要的中文注释
+- 注释没有重复代码表面含义，并且仍与实现一致
 - 文档只在确实需要时更新
 - Git 提交说明为中文
