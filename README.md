@@ -98,6 +98,36 @@ Lucide 图标（IconLucideXxx）
 
 业务 API、页面组件、业务 Query、Store、Utils、业务类型和 `components/common` 仍然保持显式 import，避免代码来源难以追踪。
 
+## 代码注释
+
+项目要求 AI 主动生成**有价值的简体中文注释**。
+
+以下内容优先注释：
+
+- 多步骤业务流程
+- 特殊业务规则和边界条件
+- 状态联动
+- API、表单和页面数据之间的转换
+- `useEffect`、缓存、懒加载等非直观实现
+- 第三方库限制和兼容处理
+- 性能优化
+- 容易被误删、误改的代码
+
+例如：
+
+```ts
+useEffect(() => {
+  if (!open) return
+
+  // React Hook Form 只在首次读取 defaultValues，切换编辑对象时需要主动同步
+  form.reset(getDefaultValues(user))
+}, [form, open, user])
+```
+
+不要求给每个变量和每行代码写注释，也不要写 `// 设置 loading`、`// 删除用户` 这种重复代码表面含义的说明。
+
+详细规则见 `skills/code-comments/SKILL.md`。
+
 ## 开始使用
 
 ```bash
@@ -144,6 +174,8 @@ skills/
 │   └── SKILL.md       API、TanStack Query、Zustand、URL 状态
 ├── typescript/
 │   └── SKILL.md       TypeScript 类型、DTO、Zod、泛型
+├── code-comments/
+│   └── SKILL.md       中文代码注释、业务流程、Why 注释
 └── react-performance/
     ├── SKILL.md       React 性能优化入口
     └── rules/         具体性能规则
@@ -154,6 +186,7 @@ skills/
 - 页面、组件、表单、路由 → `skills/react-project/SKILL.md`
 - API、Query、Mutation、状态管理 → `skills/react-data/SKILL.md`
 - TypeScript 类型设计 → `skills/typescript/SKILL.md`
+- 复杂业务流程、数据转换、关键代码注释 → `skills/code-comments/SKILL.md`
 - 性能问题 → `skills/react-performance/SKILL.md`
 
 另外可阅读：
