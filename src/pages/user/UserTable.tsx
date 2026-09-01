@@ -1,12 +1,11 @@
 import { tableFeatures, useTable, type ColumnDef } from '@tanstack/react-table'
 import { Pencil, Trash2 } from 'lucide-react'
 
+import type { User } from '@/api/user'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { formatDateTime } from '@/utils/format'
-
-import type { User } from '../types/user'
 
 interface UserTableProps {
   data: User[]

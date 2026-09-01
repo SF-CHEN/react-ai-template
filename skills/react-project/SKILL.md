@@ -1,45 +1,79 @@
 ---
 name: react-project-conventions
-description: 当前 React + TypeScript + Vite 模板的项目架构与实现规范。新增业务模块、页面、API、表单、表格、路由或共享组件时使用。
+description: 本 React + TypeScript + Vite 模板的目录与实现规范。新增页面、接口、表单、表格、路由或公共组件时使用。
 ---
 
-# React 项目规范
+# React 项目开发规范 Skill
 
-## 选择指南
+## 快速决策
 
-| 场景 | 使用方案 |
+| 需求 | 放置位置 |
 |---|---|
-| 业务功能 | `src/modules/<feature>` |
-| 服务端数据 | TanStack Query |
-| 全局客户端状态 | Zustand |
-| 表单状态 | React Hook Form |
-| 数据校验 | Zod |
-| 复杂表格行为 | TanStack Table |
-| HTTP | `src/services` 中的 Axios 封装 |
+| 后端接口 | `src/api/<name>.ts` |
+| 路由页面 | `src/pages/<name>/index.tsx` |
+| 页面专用组件 | 页面目录同级，复杂后再放 `components/` |
+| 服务端状态 | 页面附近的 `<name>.query.ts` |
+| 表单校验 | 页面附近的 `<name>.schema.ts` |
+| 全局客户端状态 | Zustand / `src/store` |
 | 基础 UI | `src/components/ui` |
-| 跨业务通用组件 | `src/components/common` |
+| 跨页面组件 | `src/components/common` |
+| 通用 Hook | `src/hooks` |
 
-## 模块模板
+## 默认结构
+
+简单页面优先：
 
 ```text
-modules/example/
-├── pages/
-├── components/
-├── api/
-├── hooks/
-├── query/
-├── schemas/
-└── types/
+pages/example/
+├── index.tsx
+├── ExampleTable.tsx
+├── ExampleFormDialog.tsx
+├── example.query.ts
+└── example.schema.ts
 ```
 
-只创建模块真实需要的目录，不要为了形式把所有空目录一次性补齐。
+只创建真正需要的文件。
 
-## 生成代码原则
+不要默认生成：
 
-1. 新增结构前先参考最接近的现有模块。
-2. 每一个状态值尽量只保留一个真实数据源。
-3. 优先写直接、清晰、容易维护的代码，不做无价值的泛型抽象。
-4. 保持现有命名方式和 import alias。
-5. 非显而易见的设计决策使用中文 Why 注释说明。
-6. 现有技术栈已经能解决问题时，不新增重复依赖。
-7. 文档、注释、Git 提交说明默认使用中文；代码标识符保持英文。
+```text
+api/
+hooks/
+query/
+schemas/
+types/
+components/
+pages/
+```
+
+这种多层结构。
+
+## 复杂后再拆
+
+只有文件明显增多或存在明确职责边界时，再增加：
+
+```text
+components/
+hooks/
+detail/
+settings/
+```
+
+目录应该降低复杂度，而不是制造复杂度。
+
+## API 规则
+
+所有接口统一放在 `src/api`。
+
+接口文件可以包含与接口直接相关的请求/响应类型。页面通过 TanStack Query 调用接口函数，页面组件不直接调用 Axios。
+
+## 生成原则
+
+1. 先阅读目标页面附近代码，再决定结构。
+2. 简单业务保持扁平。
+3. 复杂度出现后再渐进拆分。
+4. 每份状态只保留一个真实来源。
+5. 优先直接、容易阅读的代码，不做无意义通用抽象。
+6. 保持现有命名、路径别名和技术栈。
+7. 非显而易见的决策使用中文 Why 注释。
+8. 现有依赖能解决问题时，不新增同职责依赖。

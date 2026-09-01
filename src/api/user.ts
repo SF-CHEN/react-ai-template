@@ -1,5 +1,33 @@
-import type { UserFormData } from '../schemas/userSchema'
-import type { User, UserListParams, UserListResult } from '../types/user'
+export const userRoles = ['admin', 'user', 'auditor'] as const
+export const userStatuses = ['enabled', 'disabled'] as const
+
+export type UserRole = (typeof userRoles)[number]
+export type UserStatus = (typeof userStatuses)[number]
+
+export interface UserInput {
+  username: string
+  displayName: string
+  email: string
+  role: UserRole
+  status: UserStatus
+}
+
+export interface User extends UserInput {
+  id: number
+  createdAt: string
+}
+
+export interface UserListParams {
+  page: number
+  pageSize: number
+  keyword?: string
+  status?: UserStatus
+}
+
+export interface UserListResult {
+  list: User[]
+  total: number
+}
 
 let users: User[] = [
   {
@@ -67,7 +95,7 @@ export async function getUserList(params: UserListParams): Promise<UserListResul
   }
 }
 
-export async function createUser(input: UserFormData): Promise<User> {
+export async function createUser(input: UserInput): Promise<User> {
   await wait()
 
   const nextId = Math.max(0, ...users.map((user) => user.id)) + 1
@@ -81,7 +109,7 @@ export async function createUser(input: UserFormData): Promise<User> {
   return user
 }
 
-export async function updateUser(id: number, input: UserFormData): Promise<User> {
+export async function updateUser(id: number, input: UserInput): Promise<User> {
   await wait()
 
   const current = users.find((user) => user.id === id)

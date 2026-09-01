@@ -2,18 +2,17 @@ import { Plus, Search } from 'lucide-react'
 import { useState } from 'react'
 import { useSearchParams } from 'react-router'
 
+import type { User, UserStatus } from '@/api/user'
 import { PageHeader } from '@/components/common/PageHeader'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 
-import { UserFormDialog } from '../components/UserFormDialog'
-import { UserTable } from '../components/UserTable'
-import { useCreateUser, useDeleteUser, useUpdateUser } from '../hooks/useUserMutations'
-import { useUserList } from '../hooks/useUserList'
-import type { UserFormData } from '../schemas/userSchema'
-import type { User, UserStatus } from '../types/user'
+import { UserFormDialog } from './UserFormDialog'
+import { UserTable } from './UserTable'
+import { useCreateUser, useDeleteUser, useUpdateUser, useUserList } from './user.query'
+import type { UserFormData } from './user.schema'
 
 const PAGE_SIZE = 10
 
@@ -45,7 +44,6 @@ export default function UserListPage() {
 
   const updateSearch = (next: { page?: number; keyword?: string; status?: string }) => {
     const params = new URLSearchParams(searchParams)
-
     const nextPage = next.page ?? page
     const nextKeyword = next.keyword ?? keyword
     const nextStatus = next.status ?? status ?? ''
@@ -91,7 +89,7 @@ export default function UserListPage() {
     <div className="space-y-6">
       <PageHeader
         title="用户管理"
-        description="CRUD Demo：TanStack Query + Table + React Hook Form + Zod。"
+        description="CRUD 示例：TanStack Query + Table + React Hook Form + Zod。"
         actions={
           <Button onClick={handleCreate}>
             <Plus className="size-4" />

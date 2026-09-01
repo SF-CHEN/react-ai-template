@@ -3,33 +3,32 @@
 ## 生成代码前
 
 1. 先阅读 `AGENTS.md`。
-2. 新增结构前，先检查最接近的现有业务模块。
-3. 优先复用现有 UI 组件、Hook 和工具函数。
-4. 写组件前先判断状态应该属于 useState、Zustand、TanStack Query、React Hook Form 还是 URL。
-5. 代码注释、文档和 Git 提交说明默认使用中文。
+2. 先看目标页面附近已有文件，再决定是否需要新目录。
+3. 优先复用现有 UI 组件和依赖。
+4. 先判断状态属于 Query、Zustand、表单、URL 还是局部 state。
+5. 不要为了“架构完整”提前创建大量目录。
 
-## 推荐提示词模板
+## 推荐提示词
 
 ```text
-在当前仓库实现 <功能名称>。
-遵循 AGENTS.md 与现有 modules 架构。
-优先复用已有 UI 组件和依赖。
-只在非显而易见的设计决策处添加中文 Why 注释。
-现有技术栈能解决问题时，不要新增重复依赖。
-服务端状态使用 TanStack Query，全局客户端状态使用 Zustand。
-复杂表单使用 React Hook Form + Zod。
-如果依赖可用，完成后执行 typecheck / lint / test / build。
+在当前项目中实现 <功能>。
+遵循 AGENTS.md 和现有页面优先、渐进式分层结构。
+API 统一放在 src/api，不要放进页面目录。
+简单页面保持扁平，只有复杂度确实上升时才增加 components/hooks/detail 等子目录。
+优先复用现有 UI 组件和依赖。
+非显而易见的设计决策添加中文 Why 注释。
+除非现有技术栈无法满足需求，否则不要新增依赖。
+依赖可用时执行 typecheck、lint、test 和 build。
 ```
 
-## 合格的 AI 输出应该具备
+## 合格的 AI 输出
 
-例如新增“安全测评”功能时：
+应该做到：
 
-- 创建 `modules/evaluation`，而不是把文件散落到多个全局目录；
-- API、Query Key、表单、类型、组件尽量就近组织；
-- 接口列表数据使用 TanStack Query，而不是复制进 Zustand；
-- 复杂表单使用 Zod + React Hook Form；
-- 优先复用 `components/ui`；
-- 不创建没有实际价值的通用抽象；
-- 不机械添加 `useMemo`、`useCallback`、`memo`；
-- 注释解释“为什么”，并使用中文。
+- 新增简单页面时优先使用 `pages/<name>/index.tsx` 加少量同级文件；
+- 接口统一添加到 `src/api/<name>.ts`；
+- TanStack Query 逻辑放在页面附近，例如 `user.query.ts`；
+- 不把接口数据复制进 Zustand；
+- 复杂表单使用 React Hook Form + Zod；
+- 页面专用组件先就近放，跨页面复用后再提升到 `components/common`；
+- 避免无意义抽象、无意义目录和机械 memo。

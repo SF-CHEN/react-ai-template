@@ -4,8 +4,8 @@ import { Navigate, Route, Routes } from 'react-router'
 import { LoadingPage } from '@/components/common/LoadingPage'
 import { AppLayout } from '@/layouts/AppLayout'
 
-const DashboardPage = lazy(() => import('@/modules/dashboard/pages/DashboardPage'))
-const UserListPage = lazy(() => import('@/modules/user/pages/UserListPage'))
+const DashboardPage = lazy(() => import('@/pages/dashboard'))
+const UserListPage = lazy(() => import('@/pages/user'))
 
 export default function App() {
   return (
