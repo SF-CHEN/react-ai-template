@@ -1,3 +1,10 @@
+/**
+ * [INPUT]: 依赖 ESLint、typescript-eslint、React Hooks 与 React Refresh 的规则配置
+ * [OUTPUT]: 对外提供当前 React + TypeScript 项目的 ESLint 配置
+ * [POS]: 工程质量配置层的静态规则入口，约束源码错误但不过度限制代码风格
+ * [PROTOCOL]: 变更时同步更新此头部，并检查 AGENTS.md 与相关 Skill
+ * [TIME]: 2026-09-01 17:41:04
+ */
 import js from '@eslint/js'
 import globals from 'globals'
 import reactHooks from 'eslint-plugin-react-hooks'

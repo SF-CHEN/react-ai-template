@@ -1,3 +1,10 @@
+/**
+ * [INPUT]: 依赖 React Router URL 参数、用户 Query/Mutation、用户表格/表单组件及用户类型
+ * [OUTPUT]: 对外提供 UserListPage 用户管理路由页面
+ * [POS]: pages/user 的页面编排入口，统一协调筛选分页、CRUD 流程和新增/编辑弹窗
+ * [PROTOCOL]: 变更时同步更新此头部，并检查 AGENTS.md 与相关 Skill
+ * [TIME]: 2026-09-01 17:41:04
+ */
 import { useSearchParams } from 'react-router'
 
 import type { User, UserStatus } from '@/api/user'
@@ -16,6 +23,7 @@ function parsePage(value: string | null) {
 }
 
 export default function UserListPage() {
+  // 搜索、筛选和分页需要支持刷新与链接分享，因此 URL 是这些状态的真实来源
   const [searchParams, setSearchParams] = useSearchParams()
   const page = parsePage(searchParams.get('page'))
   const keyword = searchParams.get('keyword') ?? ''
@@ -23,6 +31,7 @@ export default function UserListPage() {
   const status: UserStatus | undefined =
     statusValue === 'enabled' || statusValue === 'disabled' ? statusValue : undefined
 
+  // 输入过程先保存在草稿状态，点击查询后再同步 URL，避免每次按键都触发列表请求
   const [draftKeyword, setDraftKeyword] = useState(keyword)
   const [draftStatus, setDraftStatus] = useState(status ?? 'all')
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -37,6 +46,7 @@ export default function UserListPage() {
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
 
   const updateSearch = (next: { page?: number; keyword?: string; status?: string }) => {
+    // 基于当前 URL 增量更新，避免翻页时丢失筛选条件或查询时误删其他参数
     const params = new URLSearchParams(searchParams)
     const nextPage = next.page ?? page
     const nextKeyword = next.keyword ?? keyword
@@ -50,6 +60,7 @@ export default function UserListPage() {
   }
 
   const handleSearch = () => {
+    // 新筛选条件生效时回到第一页，避免原页码超过筛选后的总页数
     updateSearch({ page: 1, keyword: draftKeyword.trim(), status: draftStatus })
   }
 
@@ -69,12 +80,14 @@ export default function UserListPage() {
   }
 
   const handleSubmit = async (values: UserFormData) => {
+    // 编辑和新增共用一个表单，只在提交阶段根据 editingUser 选择对应 Mutation
     if (editingUser) {
       await updateMutation.mutateAsync({ id: editingUser.id, input: values })
     } else {
       await createMutation.mutateAsync(values)
     }
 
+    // 仅在请求成功后关闭并清空编辑态，失败时保留用户输入方便继续修改
     setDialogOpen(false)
     setEditingUser(null)
   }

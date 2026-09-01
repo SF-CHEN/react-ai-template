@@ -1,3 +1,10 @@
+/**
+ * [INPUT]: 依赖 React Router 导航/Outlet、Zustand 应用状态、cn 工具及自动导入的 Button/Lucide 图标
+ * [OUTPUT]: 对外提供 AppLayout 中后台主布局组件
+ * [POS]: layouts 层的应用骨架，承载侧边导航、顶部栏并为业务路由提供 Outlet
+ * [PROTOCOL]: 变更时同步更新此头部，并检查 AGENTS.md 与相关 Skill
+ * [TIME]: 2026-09-01 17:41:04
+ */
 import { NavLink, Outlet } from 'react-router'
 
 import { useAppStore } from '@/store/appStore'

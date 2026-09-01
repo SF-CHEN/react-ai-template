@@ -1,3 +1,10 @@
+/**
+ * [INPUT]: 依赖 EChart 图表组件、ECharts option 类型、PageHeader 及自动导入的 Card/Lucide 图标
+ * [OUTPUT]: 对外提供 DashboardPage 工作台页面组件
+ * [POS]: pages/dashboard 的路由页面入口，演示指标卡片与 ECharts 图表组合方式
+ * [PROTOCOL]: 变更时同步更新此头部，并检查 AGENTS.md 与相关 Skill
+ * [TIME]: 2026-09-01 17:41:04
+ */
 import type { EChartsCoreOption } from '@/components/charts/echarts'
 
 import { EChart } from '@/components/charts/EChart'

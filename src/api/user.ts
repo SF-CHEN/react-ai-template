@@ -1,3 +1,10 @@
+/**
+ * [INPUT]: 依赖浏览器运行时的 Promise、Date 和内存数据集合完成模板级 Mock CRUD
+ * [OUTPUT]: 对外提供用户角色/状态类型、用户模型、列表参数及用户 CRUD API 函数
+ * [POS]: api 层的用户接口示例，当前以内存 Mock 替代真实后端并被 user.query.ts 调用
+ * [PROTOCOL]: 变更时同步更新此头部，并检查 AGENTS.md 与相关 Skill
+ * [TIME]: 2026-09-01 17:41:04
+ */
 export const userRoles = ['admin', 'user', 'auditor'] as const
 export const userStatuses = ['enabled', 'disabled'] as const
 
@@ -29,6 +36,7 @@ export interface UserListResult {
   total: number
 }
 
+// 模板默认不依赖真实后端，因此用内存数据演示完整 CRUD；接入项目接口时替换本文件实现即可
 let users: User[] = [
   {
     id: 1,

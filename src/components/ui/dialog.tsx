@@ -1,5 +1,11 @@
+/**
+ * [INPUT]: 依赖 Base UI Dialog primitive、React 组件属性类型、cn 工具及自动导入的 IconLucideX
+ * [OUTPUT]: 对外提供 Dialog 根节点、触发/关闭能力及 Content/Header/Title/Description/Footer 组合组件
+ * [POS]: components/ui 的对话框基础封装，为业务弹窗统一 Portal、遮罩、布局和关闭交互
+ * [PROTOCOL]: 变更时同步更新此头部，并检查 AGENTS.md 与相关 Skill
+ * [TIME]: 2026-09-01 17:41:04
+ */
 import { Dialog as DialogPrimitive } from '@base-ui/react/dialog'
-import { X } from 'lucide-react'
 import type { ComponentProps, HTMLAttributes, ReactNode } from 'react'
 
 import { cn } from '@/utils/cn'
@@ -48,7 +54,7 @@ export function DialogContent({
               aria-label="关闭"
               className="absolute right-4 top-4 inline-flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
-              <X className="size-4" />
+              <IconLucideX className="size-4" />
             </DialogPrimitive.Close>
           ) : null}
         </DialogPrimitive.Popup>

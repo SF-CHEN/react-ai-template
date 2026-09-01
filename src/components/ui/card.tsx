@@ -1,3 +1,10 @@
+/**
+ * [INPUT]: 依赖 React HTML 属性类型和 cn 类名合并工具
+ * [OUTPUT]: 对外提供 Card、CardHeader、CardTitle、CardDescription、CardContent 组合组件
+ * [POS]: components/ui 的基础容器组件，为页面卡片内容提供统一结构和样式
+ * [PROTOCOL]: 变更时同步更新此头部，并检查 AGENTS.md 与相关 Skill
+ * [TIME]: 2026-09-01 17:41:04
+ */
 import type { HTMLAttributes } from 'react'
 
 import { cn } from '@/utils/cn'

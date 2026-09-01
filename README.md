@@ -29,24 +29,12 @@
 ```text
 src/
 ├── api/
-│   ├── request.ts
-│   └── user.ts
 ├── app/
-│   ├── App.tsx
-│   └── AppProviders.tsx
 ├── components/
 │   ├── charts/
 │   ├── common/
 │   └── ui/
 ├── pages/
-│   ├── dashboard/
-│   │   └── index.tsx
-│   └── user/
-│       ├── index.tsx
-│       ├── UserTable.tsx
-│       ├── UserFormDialog.tsx
-│       ├── user.query.ts
-│       └── user.schema.ts
 ├── layouts/
 ├── hooks/
 ├── store/
@@ -55,28 +43,11 @@ src/
 └── utils/
 ```
 
-## 目录设计原则
-
-简单页面不要预先创建 `api / hooks / query / schemas / types / components / pages` 七八层目录。
-
-例如用户管理默认只保留：
-
-```text
-pages/user/
-├── index.tsx
-├── UserTable.tsx
-├── UserFormDialog.tsx
-├── user.query.ts
-└── user.schema.ts
-```
-
-当页面明显复杂后，再按需增加 `components/`、`detail/`、`hooks/` 等子目录。
-
-所有后端接口统一放在 `src/api/`。TanStack Query 属于页面的数据获取逻辑，放在使用它的页面附近。
+简单页面不要预先创建 `api / hooks / query / schemas / types / components / pages` 七八层目录。所有后端接口统一放 `src/api/`，页面复杂后再按需增加子目录。
 
 ## 自动导入
 
-项目使用 `unplugin-auto-import` 和 `unplugin-icons` 减少重复 import。
+项目使用 `unplugin-auto-import` 和 `unplugin-icons`。
 
 默认可以直接使用：
 
@@ -87,57 +58,45 @@ src/hooks 下的通用 Hook
 Lucide 图标（IconLucideXxx）
 ```
 
-例如：
+业务 API、页面组件、业务 Query、Store、Utils、业务类型和 `components/common` 保持显式 import。
 
-```tsx
-<Button>
-  <IconLucidePlus className="size-4" />
-  新增用户
-</Button>
-```
+## L3 文件头与代码注释
 
-业务 API、页面组件、业务 Query、Store、Utils、业务类型和 `components/common` 仍然保持显式 import，避免代码来源难以追踪。
-
-## 代码注释
-
-项目要求 AI 主动生成**有价值的简体中文注释**。
-
-以下内容优先注释：
-
-- 多步骤业务流程
-- 特殊业务规则和边界条件
-- 状态联动
-- API、表单和页面数据之间的转换
-- `useEffect`、缓存、懒加载等非直观实现
-- 第三方库限制和兼容处理
-- 性能优化
-- 容易被误删、误改的代码
-
-例如：
+项目要求手写源文件维护 L3 文件头，同时为复杂业务逻辑主动补充有价值的简体中文注释。
 
 ```ts
-useEffect(() => {
-  if (!open) return
-
-  // React Hook Form 只在首次读取 defaultValues，切换编辑对象时需要主动同步
-  form.reset(getDefaultValues(user))
-}, [form, open, user])
+/**
+ * [INPUT]: 依赖 {哪些模块/文件} 的 {什么功能}
+ * [OUTPUT]: 对外提供 {函数/组件/类型/变量}
+ * [POS]: {属于哪个模块} 的 {角色}，{与其他文件的关系}
+ * [PROTOCOL]: 变更时同步更新此头部，并检查 AGENTS.md 与相关 Skill
+ * [TIME]: {YYYY-MM-DD HH:mm:ss}
+ */
 ```
 
-不要求给每个变量和每行代码写注释，也不要写 `// 设置 loading`、`// 删除用户` 这种重复代码表面含义的说明。
+`INPUT / OUTPUT / POS` 必须与真实代码一致；修改文件时同步刷新 `[TIME]`。`src/auto-imports.d.ts`、`src/vite-env.d.ts` 等自动生成文件豁免。
+
+正文注释优先覆盖：多步骤业务流程、状态联动、特殊规则、数据转换、`useEffect` 使用原因、第三方限制、兼容处理、性能取舍和容易误改的代码。不要给每行代码写翻译式废话注释。
 
 详细规则见 `skills/code-comments/SKILL.md`。
 
+## AI 工作原则
+
+- 编码前先阅读现有代码，明确会影响实现方向的假设、歧义和取舍。
+- 简洁优先，不添加需求之外的功能、抽象、配置项或未来扩展点。
+- 修改现有项目时只做完成任务所需的最小范围变更。
+- 默认禁止 AI 主动运行 `typecheck / lint / test / build`；只有用户明确要求校验时才运行。
+- 未执行自动化校验时，AI 最终回复必须明确说明。
+
+详细规则见根目录 `AGENTS.md`。
+
 ## 开始使用
+
+开发者可手动执行：
 
 ```bash
 pnpm install
 pnpm dev
-```
-
-常用命令：
-
-```bash
 pnpm typecheck
 pnpm lint
 pnpm lint:fix
@@ -145,6 +104,8 @@ pnpm format
 pnpm test:run
 pnpm build
 ```
+
+以上命令是项目提供给开发者的能力，不代表 AI 可以默认主动执行。
 
 ## 示例页面
 
@@ -164,33 +125,18 @@ pnpm build
 
 ## AI 开发规范
 
-根目录 `AGENTS.md` 保存长期强制约定；`skills/` 只保存专项规则，避免把所有细节堆在一份文档里。
-
 ```text
 skills/
-├── react-project/
-│   └── SKILL.md       页面、组件、表单、目录结构
-├── react-data/
-│   └── SKILL.md       API、TanStack Query、Zustand、URL 状态
-├── typescript/
-│   └── SKILL.md       TypeScript 类型、DTO、Zod、泛型
-├── code-comments/
-│   └── SKILL.md       中文代码注释、业务流程、Why 注释
-└── react-performance/
-    ├── SKILL.md       React 性能优化入口
-    └── rules/         具体性能规则
+├── react-project/       页面、组件、表单、目录结构
+├── react-data/          API、TanStack Query、Zustand、URL 状态
+├── typescript/          TypeScript 类型、DTO、Zod、泛型
+├── code-comments/       L3 文件头、中文注释、业务流程、Why
+└── react-performance/   React 性能优化
 ```
-
-建议 AI 按任务读取，而不是一次性加载全部 Skill：
-
-- 页面、组件、表单、路由 → `skills/react-project/SKILL.md`
-- API、Query、Mutation、状态管理 → `skills/react-data/SKILL.md`
-- TypeScript 类型设计 → `skills/typescript/SKILL.md`
-- 复杂业务流程、数据转换、关键代码注释 → `skills/code-comments/SKILL.md`
-- 性能问题 → `skills/react-performance/SKILL.md`
 
 另外可阅读：
 
+- `AGENTS.md`：项目长期强制约定
 - `docs/architecture.md`：目录设计说明
 - `docs/ai-development.md`：AI 开发提示词和 Skill 路由
 

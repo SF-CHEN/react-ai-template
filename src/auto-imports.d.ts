@@ -1,4 +1,4 @@
-// 本文件由 unplugin-auto-import 维护，并提交到仓库以保证首次克隆后可以直接执行 typecheck。
+// 本文件由 unplugin-auto-import 维护并提交到仓库，用于让 TypeScript 识别自动导入标识符；生成文件豁免 L3 头部。
 export {}
 
 declare global {
@@ -43,6 +43,7 @@ declare global {
   const IconLucideShieldCheck: typeof import('~icons/lucide/shield-check')['default']
   const IconLucideTrash2: typeof import('~icons/lucide/trash-2')['default']
   const IconLucideUsers: typeof import('~icons/lucide/users')['default']
+  const IconLucideX: typeof import('~icons/lucide/x')['default']
 
   const useBoolean: typeof import('./hooks/useBoolean')['useBoolean']
 }

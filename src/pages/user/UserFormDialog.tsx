@@ -1,3 +1,10 @@
+/**
+ * [INPUT]: 依赖 React Hook Form、Zod Resolver、User 模型、userFormSchema 及自动导入的 Dialog/Form UI
+ * [OUTPUT]: 对外提供 UserFormDialog 用户新增/编辑表单弹窗组件
+ * [POS]: pages/user 的页面专用表单组件，由 index.tsx 控制打开状态并提交用户表单数据
+ * [PROTOCOL]: 变更时同步更新此头部，并检查 AGENTS.md 与相关 Skill
+ * [TIME]: 2026-09-01 17:41:04
+ */
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 
@@ -38,7 +45,7 @@ export function UserFormDialog({
   useEffect(() => {
     if (!open) return
 
-    // React Hook Form 自己维护表单状态，因此新增/编辑记录切换时需要主动重置默认值
+    // React Hook Form 只在首次初始化 defaultValues，切换新增/编辑对象时需要主动重置表单
     form.reset(getDefaultValues(user))
   }, [form, open, user])
 
