@@ -1,12 +1,11 @@
-import { BarChart3, ChevronLeft, ChevronRight, LayoutDashboard, Users } from 'lucide-react'
 import { NavLink, Outlet } from 'react-router'
 
 import { useAppStore } from '@/store/appStore'
 import { cn } from '@/utils/cn'
 
 const navItems = [
-  { to: '/', label: '工作台', icon: LayoutDashboard, end: true },
-  { to: '/users', label: '用户管理', icon: Users },
+  { to: '/', label: '工作台', icon: IconLucideLayoutDashboard, end: true },
+  { to: '/users', label: '用户管理', icon: IconLucideUsers },
 ]
 
 export function AppLayout() {
@@ -23,7 +22,7 @@ export function AppLayout() {
       >
         <div className="flex h-16 items-center gap-3 border-b border-border px-4">
           <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            <BarChart3 className="size-5" />
+            <IconLucideChartBar className="size-5" />
           </div>
           {sidebarCollapsed ? null : (
             <div className="min-w-0">
@@ -58,7 +57,11 @@ export function AppLayout() {
       <div className={cn('transition-[padding] duration-200', sidebarCollapsed ? 'pl-[72px]' : 'pl-60')}>
         <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-border bg-background/90 px-6 backdrop-blur">
           <Button variant="ghost" size="icon" onClick={toggleSidebar} aria-label="切换侧边栏">
-            {sidebarCollapsed ? <ChevronRight className="size-4" /> : <ChevronLeft className="size-4" />}
+            {sidebarCollapsed ? (
+              <IconLucideChevronRight className="size-4" />
+            ) : (
+              <IconLucideChevronLeft className="size-4" />
+            )}
           </Button>
           <div className="text-sm text-muted-foreground">React + Vite + shadcn/ui</div>
         </header>

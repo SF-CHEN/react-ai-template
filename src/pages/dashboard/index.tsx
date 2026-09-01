@@ -1,5 +1,4 @@
 import type { EChartsCoreOption } from '@/components/charts/echarts'
-import { Activity, Database, ShieldCheck, Users } from 'lucide-react'
 
 import { EChart } from '@/components/charts/EChart'
 import { PageHeader } from '@/components/common/PageHeader'
@@ -27,10 +26,10 @@ const trendOption: EChartsCoreOption = {
 }
 
 const metrics = [
-  { title: '用户数', value: '1,284', change: '+12.5%', icon: Users },
-  { title: '今日请求', value: '8,642', change: '+8.2%', icon: Activity },
-  { title: '数据集', value: '326', change: '+4.1%', icon: Database },
-  { title: '安全状态', value: '正常', change: '99.9%', icon: ShieldCheck },
+  { title: '用户数', value: '1,284', change: '+12.5%', icon: IconLucideUsers },
+  { title: '今日请求', value: '8,642', change: '+8.2%', icon: IconLucideActivity },
+  { title: '数据集', value: '326', change: '+4.1%', icon: IconLucideDatabase },
+  { title: '安全状态', value: '正常', change: '99.9%', icon: IconLucideShieldCheck },
 ]
 
 export default function DashboardPage() {
@@ -38,7 +37,7 @@ export default function DashboardPage() {
     <div className="space-y-6">
       <PageHeader
         title="工作台"
-        description="这里放模板的基础 Dashboard Demo，业务项目可直接替换。"
+        description="这里放模板的基础 Dashboard 示例，业务项目可直接替换。"
       />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">

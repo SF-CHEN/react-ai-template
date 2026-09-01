@@ -7,6 +7,7 @@ declare global {
   const useMemo: typeof import('react')['useMemo']
   const useCallback: typeof import('react')['useCallback']
   const useRef: typeof import('react')['useRef']
+
   const Badge: typeof import('./components/ui/badge')['Badge']
   const Button: typeof import('./components/ui/button')['Button']
   const Card: typeof import('./components/ui/card')['Card']
@@ -29,5 +30,19 @@ declare global {
   const TableHead: typeof import('./components/ui/table')['TableHead']
   const TableHeader: typeof import('./components/ui/table')['TableHeader']
   const TableRow: typeof import('./components/ui/table')['TableRow']
+
+  const IconLucideActivity: typeof import('~icons/lucide/activity')['default']
+  const IconLucideChartBar: typeof import('~icons/lucide/chart-bar')['default']
+  const IconLucideChevronLeft: typeof import('~icons/lucide/chevron-left')['default']
+  const IconLucideChevronRight: typeof import('~icons/lucide/chevron-right')['default']
+  const IconLucideDatabase: typeof import('~icons/lucide/database')['default']
+  const IconLucideLayoutDashboard: typeof import('~icons/lucide/layout-dashboard')['default']
+  const IconLucidePencil: typeof import('~icons/lucide/pencil')['default']
+  const IconLucidePlus: typeof import('~icons/lucide/plus')['default']
+  const IconLucideSearch: typeof import('~icons/lucide/search')['default']
+  const IconLucideShieldCheck: typeof import('~icons/lucide/shield-check')['default']
+  const IconLucideTrash2: typeof import('~icons/lucide/trash-2')['default']
+  const IconLucideUsers: typeof import('~icons/lucide/users')['default']
+
   const useBoolean: typeof import('./hooks/useBoolean')['useBoolean']
 }

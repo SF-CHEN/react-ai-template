@@ -1,4 +1,3 @@
-import { Plus, Search } from 'lucide-react'
 import { useSearchParams } from 'react-router'
 
 import type { User, UserStatus } from '@/api/user'
@@ -87,7 +86,7 @@ export default function UserListPage() {
         description="CRUD 示例：TanStack Query + Table + React Hook Form + Zod。"
         actions={
           <Button onClick={handleCreate}>
-            <Plus className="size-4" />
+            <IconLucidePlus className="size-4" />
             新增用户
           </Button>
         }
@@ -115,7 +114,7 @@ export default function UserListPage() {
               <option value="disabled">禁用</option>
             </Select>
             <Button variant="secondary" onClick={handleSearch}>
-              <Search className="size-4" />
+              <IconLucideSearch className="size-4" />
               查询
             </Button>
           </div>

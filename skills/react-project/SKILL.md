@@ -18,6 +18,7 @@ description: 本 React + TypeScript + Vite 模板的目录与实现规范。新�
 | 基础 UI | `src/components/ui`，允许自动导入 |
 | 跨页面组件 | `src/components/common`，保持显式导入 |
 | 通用 Hook | `src/hooks`，允许自动导入 |
+| 图标 | `IconLucideXxx`，自动导入 |
 
 ## 默认结构
 
@@ -36,16 +37,7 @@ pages/example/
 
 ## 复杂后再拆
 
-只有文件明显增多或存在明确职责边界时，再增加：
-
-```text
-components/
-hooks/
-detail/
-settings/
-```
-
-目录应该降低复杂度，而不是制造复杂度。
+只有文件明显增多或存在明确职责边界时，再增加 `components/`、`hooks/`、`detail/`、`settings/` 等目录。目录应该降低复杂度，而不是制造复杂度。
 
 ## API 规则
 
@@ -55,15 +47,27 @@ settings/
 
 ## 自动导入规则
 
-项目使用 `unplugin-auto-import`。
+项目使用 `unplugin-auto-import + unplugin-icons`。
 
 可以直接使用而不写 import：
 
 - React 常用 API
 - `src/components/ui` 中的基础 UI 组件
 - `src/hooks` 中的通用 Hook
+- Lucide 图标，统一写成 `IconLucideXxx`
 
-业务相关内容保持显式 import，包括 API、页面组件、业务 Query、Store、工具函数、类型、图标和 `components/common`。
+例如：
+
+```tsx
+<Button>
+  <IconLucidePlus className="size-4" />
+  新增
+</Button>
+```
+
+不要生成 `lucide-react` import。默认只启用 Lucide 图标集合，不要自行增加其他图标集合。
+
+业务相关内容保持显式 import，包括 API、页面组件、业务 Query、Store、工具函数、类型和 `components/common`。
 
 不要扩大自动扫描范围到整个 `src`，避免代码来源变得不可追踪。
 
@@ -72,7 +76,7 @@ settings/
 1. 先阅读目标页面附近代码，再决定结构。
 2. 简单业务保持扁平。
 3. 复杂度出现后再渐进拆分。
-4. 基础 UI 优先直接使用自动导入，不重复生成 `components/ui` import。
+4. 基础 UI、React API 和 Lucide 图标优先使用自动导入。
 5. 业务依赖保持显式 import。
 6. 每份状态只保留一个真实来源。
 7. 优先直接、容易阅读的代码，不做无意义通用抽象。

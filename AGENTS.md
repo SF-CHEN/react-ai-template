@@ -15,6 +15,7 @@
 - Axios
 - ECharts
 - unplugin-auto-import
+- unplugin-icons + Lucide Iconify 图标集
 - ESLint + Prettier
 
 没有明确需求时，不要引入职责重复的第二套库。
@@ -39,72 +40,17 @@ src/
 └── utils/            通用纯函数
 ```
 
-### 简单页面默认扁平
-
-例如用户管理：
-
-```text
-pages/user/
-├── index.tsx
-├── UserTable.tsx
-├── UserFormDialog.tsx
-├── user.query.ts
-└── user.schema.ts
-```
-
-不要机械创建：
-
-```text
-api/
-hooks/
-query/
-schemas/
-types/
-components/
-pages/
-```
-
-一个目录只有一两个文件时，优先保持扁平。
-
-### 页面复杂后再分组
-
-当页面文件明显增多，或出现清晰职责边界时，再按需创建子目录：
-
-```text
-pages/evaluation/
-├── index.tsx
-├── detail/
-│   └── index.tsx
-├── components/
-│   ├── EvaluationTable.tsx
-│   └── EvaluationForm.tsx
-├── evaluation.query.ts
-└── evaluation.schema.ts
-```
-
-目录是为了解决复杂度才创建，不是为了让结构看起来“完整”。
+简单页面默认保持扁平。文件明显增多或出现清晰职责边界后，再按需增加 `components/`、`hooks/`、`detail/` 等目录。目录是为了解决复杂度才创建，不是为了让结构看起来完整。
 
 ## 3. API 规范
 
 所有后端接口统一放在 `src/api/`，不要把 API 放进页面或业务目录。
 
-例如：
-
-```text
-src/api/
-├── request.ts
-├── user.ts
-├── role.ts
-└── report.ts
-```
-
-规则：
-
 - 页面和 UI 组件不直接调用 Axios。
 - `api/request.ts` 负责 Axios 实例、拦截器和基础请求能力。
 - 每个业务接口文件可以同时放该接口直接相关的请求/响应类型。
 - TanStack Query Hook 放在使用它的页面附近，例如 `pages/user/user.query.ts`。
-- 不为了分层而单独创建 `query/userKeys.ts`、`hooks/useUserList.ts`、`hooks/useUserMutations.ts`；简单场景合并到一个 `user.query.ts`。
+- 简单场景不要为了分层单独创建 `query/userKeys.ts`、`hooks/useUserList.ts`、`hooks/useUserMutations.ts`。
 
 ## 4. 状态归属
 
@@ -140,26 +86,40 @@ src/api/
 
 ## 7. 自动导入规则
 
-项目使用 `unplugin-auto-import`，目的是减少基础代码的重复 import，不是隐藏业务依赖。
+项目使用 `unplugin-auto-import + unplugin-icons`，目的是减少基础代码的重复 import，不是隐藏业务依赖。
 
 允许自动导入：
 
 - React 常用 API
 - `src/components/ui` 下的基础 UI 组件
 - `src/hooks` 下的跨页面通用 Hook
+- Lucide 图标，统一使用 `IconLucideXxx` 命名
 
-例如下面这些基础组件不需要显式导入：
+例如：
 
 ```tsx
-<Card>
-  <CardContent>
-    <Input />
-    <Button>保存</Button>
-  </CardContent>
-</Card>
+<Button>
+  <IconLucidePlus className="size-4" />
+  新增
+</Button>
 ```
 
-以下内容必须保持显式 import：
+不要生成：
+
+```tsx
+import { Button } from '@/components/ui/button'
+import { Plus } from 'lucide-react'
+```
+
+图标规则：
+
+- 默认只使用 Lucide 集合。
+- 图标组件统一使用 `IconLucideXxx`，例如 `IconLucideSearch`、`IconLucideTrash2`。
+- 不再依赖 `lucide-react`。
+- 只有确实找不到合适 Lucide 图标时，才讨论是否增加其他集合。
+- 不要把整个 `src` 加入自动扫描范围。
+
+以下内容保持显式 import：
 
 - `src/api` 中的接口函数和业务类型
 - 页面专用组件
@@ -167,12 +127,10 @@ src/api/
 - `src/store`
 - `src/utils`
 - `components/common`
-- 图标库
 - 业务类型
+- 其他第三方业务库
 
-不要把整个 `src` 加入自动扫描范围。自动导入只用于**稳定、通用、来源明确**的基础能力。
-
-`src/auto-imports.d.ts` 由插件维护并提交到仓库。新增 `components/ui` 组件或 `src/hooks` 通用 Hook 后，应让 Vite 重新生成该声明文件并一并提交。
+`src/auto-imports.d.ts` 由插件维护并提交到仓库。新增 UI、通用 Hook 或新的自动导入图标后，应让 Vite 重新生成声明并一并提交。
 
 ## 8. 表单规则
 
@@ -191,16 +149,7 @@ src/api/
 
 ## 10. Git 提交
 
-Git commit message 默认使用中文，简短描述真实修改目的，例如：
-
-```text
-简化页面目录结构
-完善用户管理示例
-修复用户列表分页问题
-优化请求错误处理
-```
-
-不强制 Conventional Commits；如果使用，描述部分仍写中文。
+Git commit message 默认使用中文，简短描述真实修改目的。
 
 项目不使用 Husky 和 lint-staged。
 

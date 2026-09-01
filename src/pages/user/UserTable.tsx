@@ -1,5 +1,4 @@
 import { tableFeatures, useTable, type ColumnDef } from '@tanstack/react-table'
-import { Pencil, Trash2 } from 'lucide-react'
 
 import type { User } from '@/api/user'
 import { formatDateTime } from '@/utils/format'
@@ -57,11 +56,11 @@ export function UserTable({ data, loading = false, onEdit, onDelete }: UserTable
       cell: ({ row }) => (
         <div className="flex justify-end gap-1">
           <Button variant="ghost" size="sm" onClick={() => onEdit(row.original)}>
-            <Pencil className="size-3.5" />
+            <IconLucidePencil className="size-3.5" />
             编辑
           </Button>
           <Button variant="ghost" size="sm" onClick={() => onDelete(row.original)}>
-            <Trash2 className="size-3.5" />
+            <IconLucideTrash2 className="size-3.5" />
             删除
           </Button>
         </div>

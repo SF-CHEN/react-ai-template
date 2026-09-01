@@ -16,6 +16,7 @@
 - ECharts
 - Day.js
 - unplugin-auto-import
+- unplugin-icons + Lucide Iconify 图标集
 - ESLint + Prettier
 - Vitest
 
@@ -75,38 +76,45 @@ pages/user/
 
 ## 自动导入
 
-项目使用 `unplugin-auto-import` 减少重复 import。
+项目使用 `unplugin-auto-import` 和 `unplugin-icons` 减少重复 import。
 
-默认自动导入：
+默认可以直接使用：
 
 ```text
 React 常用 API
 src/components/ui 下的基础 UI 组件
 src/hooks 下的通用 Hook
+Lucide 图标（IconLucideXxx）
 ```
 
-所以页面可以直接写：
+例如：
 
 ```tsx
-<Card>
-  <CardContent>
-    <Input />
-    <Select />
-    <Button>查询</Button>
-  </CardContent>
-</Card>
+<Button>
+  <IconLucidePlus className="size-4" />
+  新增用户
+</Button>
 ```
 
-不需要重复写：
+不需要写：
 
 ```tsx
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Select } from '@/components/ui/select'
+import { Plus } from 'lucide-react'
 ```
 
-以下内容仍然保持显式导入：
+图标统一使用 `IconLucideXxx` 命名，例如：
+
+```tsx
+<IconLucideSearch />
+<IconLucidePencil />
+<IconLucideTrash2 />
+<IconLucideUsers />
+```
+
+模板只启用 Lucide 图标集，实际使用到的图标才会进入最终 Bundle。
+
+以下内容仍保持显式导入：
 
 - `api`
 - 页面和业务组件
@@ -114,10 +122,8 @@ import { Select } from '@/components/ui/select'
 - Zustand Store
 - 类型
 - 工具函数
-- 图标库
 - `components/common` 下的跨页面组件
-
-这样可以减少基础组件的重复 import，同时保留业务代码的来源可读性。
+- 其他第三方业务库
 
 `src/auto-imports.d.ts` 由插件维护并提交到仓库，保证首次克隆后也能直接进行 TypeScript 检查。
 
@@ -149,7 +155,7 @@ pnpm build
 - TanStack Query 查询、Mutation、缓存失效示例
 - TanStack Table 表格示例
 - React Hook Form + Zod 表单示例
-- UI 基础组件自动导入示例
+- React、UI 基础组件和 Lucide 图标自动导入示例
 - URL 搜索、筛选、分页状态示例
 - 路由级懒加载示例
 
