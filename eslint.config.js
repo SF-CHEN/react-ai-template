@@ -18,6 +18,8 @@ export default tseslint.config(
       'react-refresh': reactRefresh,
     },
     rules: {
+      // TypeScript 已经负责检查未定义标识符，关闭该规则以兼容自动导入生成的全局类型声明
+      'no-undef': 'off',
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'warn',
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],

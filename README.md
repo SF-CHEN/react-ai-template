@@ -15,6 +15,7 @@
 - Axios
 - ECharts
 - Day.js
+- unplugin-auto-import
 - ESLint + Prettier
 - Vitest
 
@@ -72,6 +73,54 @@ pages/user/
 
 所有后端接口统一放在 `src/api/`。TanStack Query 属于页面的数据获取逻辑，放在使用它的页面附近。
 
+## 自动导入
+
+项目使用 `unplugin-auto-import` 减少重复 import。
+
+默认自动导入：
+
+```text
+React 常用 API
+src/components/ui 下的基础 UI 组件
+src/hooks 下的通用 Hook
+```
+
+所以页面可以直接写：
+
+```tsx
+<Card>
+  <CardContent>
+    <Input />
+    <Select />
+    <Button>查询</Button>
+  </CardContent>
+</Card>
+```
+
+不需要重复写：
+
+```tsx
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Select } from '@/components/ui/select'
+```
+
+以下内容仍然保持显式导入：
+
+- `api`
+- 页面和业务组件
+- 页面业务 Query / Hook
+- Zustand Store
+- 类型
+- 工具函数
+- 图标库
+- `components/common` 下的跨页面组件
+
+这样可以减少基础组件的重复 import，同时保留业务代码的来源可读性。
+
+`src/auto-imports.d.ts` 由插件维护并提交到仓库，保证首次克隆后也能直接进行 TypeScript 检查。
+
 ## 开始使用
 
 ```bash
@@ -100,6 +149,7 @@ pnpm build
 - TanStack Query 查询、Mutation、缓存失效示例
 - TanStack Table 表格示例
 - React Hook Form + Zod 表单示例
+- UI 基础组件自动导入示例
 - URL 搜索、筛选、分页状态示例
 - 路由级懒加载示例
 

@@ -14,6 +14,7 @@
 - TanStack Table
 - Axios
 - ECharts
+- unplugin-auto-import
 - ESLint + Prettier
 
 没有明确需求时，不要引入职责重复的第二套库。
@@ -137,14 +138,50 @@ src/api/
 - Props 使用明确 TypeScript 类型。
 - 避免 `any`；确实无法避免时添加中文注释说明原因。
 
-## 7. 表单规则
+## 7. 自动导入规则
+
+项目使用 `unplugin-auto-import`，目的是减少基础代码的重复 import，不是隐藏业务依赖。
+
+允许自动导入：
+
+- React 常用 API
+- `src/components/ui` 下的基础 UI 组件
+- `src/hooks` 下的跨页面通用 Hook
+
+例如下面这些基础组件不需要显式导入：
+
+```tsx
+<Card>
+  <CardContent>
+    <Input />
+    <Button>保存</Button>
+  </CardContent>
+</Card>
+```
+
+以下内容必须保持显式 import：
+
+- `src/api` 中的接口函数和业务类型
+- 页面专用组件
+- 页面业务 Query / Hook
+- `src/store`
+- `src/utils`
+- `components/common`
+- 图标库
+- 业务类型
+
+不要把整个 `src` 加入自动扫描范围。自动导入只用于**稳定、通用、来源明确**的基础能力。
+
+`src/auto-imports.d.ts` 由插件维护并提交到仓库。新增 `components/ui` 组件或 `src/hooks` 通用 Hook 后，应让 Vite 重新生成该声明文件并一并提交。
+
+## 8. 表单规则
 
 - 复杂表单使用 React Hook Form + Zod。
 - Schema 与页面放在一起，例如 `pages/user/user.schema.ts`。
 - 表单字段与接口入参一致时直接提交表单对象，不重复逐字段赋值。
 - 只有字段名、格式、过滤规则或 DTO 结构不同才做转换。
 
-## 8. 注释与文档
+## 9. 注释与文档
 
 所有人工和 AI 生成的代码注释默认使用中文。
 
@@ -152,7 +189,7 @@ src/api/
 
 `README.md`、`docs/`、`skills/`、项目规划和维护文档默认使用中文。技术名词、库名和代码标识符保留英文原名即可。
 
-## 9. Git 提交
+## 10. Git 提交
 
 Git commit message 默认使用中文，简短描述真实修改目的，例如：
 
@@ -167,7 +204,7 @@ Git commit message 默认使用中文，简短描述真实修改目的，例如�
 
 项目不使用 Husky 和 lint-staged。
 
-## 10. 代码质量
+## 11. 代码质量
 
 保留 ESLint 与 Prettier，规则重点检查真实错误，不做过度风格限制。
 
@@ -180,7 +217,7 @@ pnpm test:run
 pnpm build
 ```
 
-## 11. 性能优化
+## 12. 性能优化
 
 性能相关工作参考 `skills/react-performance/SKILL.md`。
 

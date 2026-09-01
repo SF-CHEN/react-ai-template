@@ -1,13 +1,8 @@
 import { Plus, Search } from 'lucide-react'
-import { useState } from 'react'
 import { useSearchParams } from 'react-router'
 
 import type { User, UserStatus } from '@/api/user'
 import { PageHeader } from '@/components/common/PageHeader'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Select } from '@/components/ui/select'
 
 import { UserFormDialog } from './UserFormDialog'
 import { UserTable } from './UserTable'

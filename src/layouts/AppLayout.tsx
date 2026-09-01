@@ -1,7 +1,6 @@
 import { BarChart3, ChevronLeft, ChevronRight, LayoutDashboard, Users } from 'lucide-react'
 import { NavLink, Outlet } from 'react-router'
 
-import { Button } from '@/components/ui/button'
 import { useAppStore } from '@/store/appStore'
 import { cn } from '@/utils/cn'
 
@@ -29,7 +28,7 @@ export function AppLayout() {
           {sidebarCollapsed ? null : (
             <div className="min-w-0">
               <div className="truncate text-sm font-semibold">React AI Template</div>
-              <div className="truncate text-xs text-muted-foreground">Module Architecture</div>
+              <div className="truncate text-xs text-muted-foreground">Progressive Page Architecture</div>
             </div>
           )}
         </div>

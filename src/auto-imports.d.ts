@@ -1,0 +1,33 @@
+// 本文件由 unplugin-auto-import 维护，并提交到仓库以保证首次克隆后可以直接执行 typecheck。
+export {}
+
+declare global {
+  const useState: typeof import('react')['useState']
+  const useEffect: typeof import('react')['useEffect']
+  const useMemo: typeof import('react')['useMemo']
+  const useCallback: typeof import('react')['useCallback']
+  const useRef: typeof import('react')['useRef']
+  const Badge: typeof import('./components/ui/badge')['Badge']
+  const Button: typeof import('./components/ui/button')['Button']
+  const Card: typeof import('./components/ui/card')['Card']
+  const CardContent: typeof import('./components/ui/card')['CardContent']
+  const CardDescription: typeof import('./components/ui/card')['CardDescription']
+  const CardHeader: typeof import('./components/ui/card')['CardHeader']
+  const CardTitle: typeof import('./components/ui/card')['CardTitle']
+  const Dialog: typeof import('./components/ui/dialog')['Dialog']
+  const DialogContent: typeof import('./components/ui/dialog')['DialogContent']
+  const DialogDescription: typeof import('./components/ui/dialog')['DialogDescription']
+  const DialogFooter: typeof import('./components/ui/dialog')['DialogFooter']
+  const DialogHeader: typeof import('./components/ui/dialog')['DialogHeader']
+  const DialogTitle: typeof import('./components/ui/dialog')['DialogTitle']
+  const Input: typeof import('./components/ui/input')['Input']
+  const Label: typeof import('./components/ui/label')['Label']
+  const Select: typeof import('./components/ui/select')['Select']
+  const Table: typeof import('./components/ui/table')['Table']
+  const TableBody: typeof import('./components/ui/table')['TableBody']
+  const TableCell: typeof import('./components/ui/table')['TableCell']
+  const TableHead: typeof import('./components/ui/table')['TableHead']
+  const TableHeader: typeof import('./components/ui/table')['TableHeader']
+  const TableRow: typeof import('./components/ui/table')['TableRow']
+  const useBoolean: typeof import('./hooks/useBoolean')['useBoolean']
+}

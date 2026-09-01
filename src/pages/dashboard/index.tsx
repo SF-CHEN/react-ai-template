@@ -3,7 +3,6 @@ import { Activity, Database, ShieldCheck, Users } from 'lucide-react'
 
 import { EChart } from '@/components/charts/EChart'
 import { PageHeader } from '@/components/common/PageHeader'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
 const trendOption: EChartsCoreOption = {
   tooltip: { trigger: 'axis' },
