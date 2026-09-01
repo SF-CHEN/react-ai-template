@@ -150,6 +150,41 @@ await createUser({
 
 业务 API、业务 Query、页面组件、Store、Utils、业务类型和 `components/common` 保持显式 import。
 
+## 代码注释
+
+页面和组件代码不是“能看懂就完全不写注释”。遇到以下内容应主动写中文注释：
+
+- 多步骤业务流程
+- 特殊状态联动
+- 表单和接口数据转换
+- `useEffect` 等容易让人疑惑的实现
+- 特殊业务规则和边界条件
+- 第三方组件或框架限制
+- 性能优化和兼容处理
+
+例如：
+
+```ts
+useEffect(() => {
+  if (!open) return
+
+  // React Hook Form 只在首次读取 defaultValues，编辑对象变化时需要主动同步
+  form.reset(getDefaultValues(user))
+}, [form, open, user])
+```
+
+复杂提交流程可以标出关键阶段：
+
+```ts
+// 先完成服务端更新，成功后再关闭弹窗，避免请求失败时丢失用户输入
+await updateMutation.mutateAsync(values)
+setDialogOpen(false)
+```
+
+不要写 `// 设置状态`、`// 点击按钮` 这种重复代码表面含义的注释。
+
+更详细的注释规范见 `skills/code-comments/SKILL.md`。
+
 ## 生成流程
 
 1. 先阅读目标页面附近的现有文件。
@@ -157,5 +192,6 @@ await createUser({
 3. 先复用现有 UI、Hook、工具和技术栈。
 4. 创建最少必要文件。
 5. 业务流程优先写清楚，再考虑抽象。
-6. 非显而易见的设计决策添加中文 Why 注释。
+6. 为复杂业务流程、特殊约束、数据转换和容易误改的实现添加必要的中文注释。
 7. 完成后检查是否无意义增加目录或公共抽象。
+8. 检查复杂文件是否完全没有注释；如果有，应确认是不是遗漏了关键说明。
