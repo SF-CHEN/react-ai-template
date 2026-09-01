@@ -1,28 +1,35 @@
-# AI Development Guide
+# AI 开发指南
 
-## Before Generating Code
+## 生成代码前
 
-1. Read `AGENTS.md`.
-2. Inspect the nearest existing module before creating a new pattern.
-3. Reuse existing UI primitives and utilities.
-4. Decide where state belongs before writing components.
+1. 先阅读 `AGENTS.md`。
+2. 新增结构前，先检查最接近的现有业务模块。
+3. 优先复用现有 UI 组件、Hook 和工具函数。
+4. 写组件前先判断状态应该属于 useState、Zustand、TanStack Query、React Hook Form 还是 URL。
+5. 代码注释、文档和 Git 提交说明默认使用中文。
 
-## Prompt Template
+## 推荐提示词模板
 
 ```text
-Implement <feature> in this repository.
-Follow AGENTS.md and the existing modules architecture.
-Reuse existing UI components and dependencies.
-Add Why comments only for non-obvious decisions.
-Do not add a new dependency unless the existing stack cannot solve the requirement.
-Run typecheck/lint/tests/build if dependencies are available.
+在当前仓库实现 <功能名称>。
+遵循 AGENTS.md 与现有 modules 架构。
+优先复用已有 UI 组件和依赖。
+只在非显而易见的设计决策处添加中文 Why 注释。
+现有技术栈能解决问题时，不要新增重复依赖。
+服务端状态使用 TanStack Query，全局客户端状态使用 Zustand。
+复杂表单使用 React Hook Form + Zod。
+如果依赖可用，完成后执行 typecheck / lint / test / build。
 ```
 
-## Good AI Output
+## 合格的 AI 输出应该具备
 
-- adds `modules/evaluation` for an evaluation feature,
-- keeps API, query keys, forms, types, and components close together,
-- uses TanStack Query rather than storing fetched lists in Zustand,
-- uses Zod + React Hook Form for complex forms,
-- reuses `components/ui`,
-- avoids unnecessary abstractions and unnecessary memoization.
+例如新增“安全测评”功能时：
+
+- 创建 `modules/evaluation`，而不是把文件散落到多个全局目录；
+- API、Query Key、表单、类型、组件尽量就近组织；
+- 接口列表数据使用 TanStack Query，而不是复制进 Zustand；
+- 复杂表单使用 Zod + React Hook Form；
+- 优先复用 `components/ui`；
+- 不创建没有实际价值的通用抽象；
+- 不机械添加 `useMemo`、`useCallback`、`memo`；
+- 注释解释“为什么”，并使用中文。

@@ -1,9 +1,11 @@
-# Lazy-load Heavy Feature Boundaries
+# 对重型功能使用动态加载
 
-For heavy routes/editors/charts that are not required immediately, prefer `React.lazy` or dynamic `import()`.
+只有在组件或依赖确实较重、且不属于首屏必需内容时，才考虑动态加载。
+
+Vite 项目使用 React `lazy` + `Suspense`：
 
 ```tsx
-const ReportDesigner = lazy(() => import('./ReportDesigner'))
+const Editor = lazy(() => import('./Editor'))
 ```
 
-Do not split tiny components merely to increase the number of chunks.
+不要为了形式把所有页面都拆成懒加载。应优先考虑编辑器、大型图表、富文本、低频功能等真正有收益的边界。

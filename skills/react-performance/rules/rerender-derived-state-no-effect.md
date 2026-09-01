@@ -1,12 +1,14 @@
-# Derive State During Render
+# 派生状态不要通过 Effect 同步
 
-If a value can be calculated from props/state, do not keep a synchronized copy.
+如果一个值可以直接根据当前 props 或 state 计算得到，就不要再额外保存一份同步状态。
 
 ```tsx
-// Avoid
+// 不推荐
 const [fullName, setFullName] = useState('')
 useEffect(() => setFullName(`${firstName} ${lastName}`), [firstName, lastName])
 
-// Prefer
+// 推荐
 const fullName = `${firstName} ${lastName}`
 ```
+
+这样可以减少状态源、避免同步错误，也能减少一次额外渲染。

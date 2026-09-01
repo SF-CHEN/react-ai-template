@@ -1,3 +1,5 @@
-# Put Interaction Logic in Event Handlers
+# 用户交互逻辑优先放事件处理函数
 
-If logic happens because the user clicked/submitted/selected something, prefer handling it in that event rather than setting state and watching it from an effect.
+如果逻辑明确由一次点击、提交、选择等用户操作触发，优先直接写在对应事件处理函数中，不要通过设置状态后再让 `useEffect` 间接执行。
+
+这样可以减少隐式依赖，让触发原因更清楚，也更容易调试。

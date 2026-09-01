@@ -13,7 +13,7 @@ export function EChart({ option, height = 320 }: EChartProps) {
   useEffect(() => {
     if (!containerRef.current) return
 
-    // ECharts owns an imperative canvas instance, so useEffect is the correct boundary for syncing it.
+    // ECharts 自己维护命令式 Canvas 实例，因此这里使用 useEffect 负责与 React 生命周期同步
     const chart = init(containerRef.current)
     chart.setOption(option)
 

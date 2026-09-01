@@ -1,3 +1,10 @@
-# Prefer Analyzable Imports
+# 优先直接导入需要的模块
 
-For large libraries, import from documented subpaths when that materially improves tree-shaking or bundle size. Do not create blanket rules against every barrel file; local application barrels can be fine when they do not hide large dependency graphs.
+对于体积较大的工具库或组件库，优先从明确入口导入实际需要的内容，避免因为宽泛入口把不必要代码带进 Bundle。
+
+```ts
+// 根据库的导出方式，优先选择可被良好 tree-shaking 的明确入口
+import { debounce } from 'lodash-es'
+```
+
+是否需要进一步拆分导入，应以 Vite 构建结果和真实 Bundle 分析为依据，不要仅凭规则机械修改。

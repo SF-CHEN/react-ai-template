@@ -1,70 +1,64 @@
 ---
-name: react-vite-performance
-description: Performance guidelines adapted for this React + Vite template. Use when writing, reviewing, or optimizing React code, data fetching, rendering, or bundles. TanStack Query replaces SWR and Next.js-only server rules are intentionally excluded.
-license: MIT
-metadata:
-  upstream: vercel-react-best-practices
-  adaptation: React + Vite + TanStack Query
+name: react-performance
+description: 面向当前 React + TypeScript + Vite + TanStack Query 模板的性能优化建议。处理网络瀑布、重复渲染、大列表、Bundle 体积或昂贵计算时使用。
 ---
 
-# React + Vite Performance Guidelines
+# React 性能优化 Skill
 
-This skill is adapted from the uploaded Vercel React Best Practices skill for this repository's stack.
+本 Skill 基于用户提供的 Vercel React Best Practices 做了适配，目标不是机械套用“优化技巧”，而是在出现真实性能问题时提供可执行的判断依据。
 
-## Optimization Principle
+## 总原则
 
-Do not apply optimizations mechanically. Prefer clear and maintainable code by default.
+默认优先写清晰、可维护的代码。
 
-Apply performance patterns when there is a concrete reason:
+只有存在明确原因时才应用性能优化，例如：
 
-- network waterfalls,
-- duplicate server requests,
-- expensive computations,
-- large lists,
-- heavy route/feature bundles,
-- measurable rerender cost,
-- interaction responsiveness issues.
+- 多个独立请求被串行 await，形成网络瀑布
+- 重复渲染产生可观察成本
+- 页面包含大列表或大量 DOM
+- 某个计算明显昂贵
+- 重型依赖进入首屏 Bundle
+- 相同接口被多个组件重复请求
 
-Do not add `memo`, `useMemo`, `useCallback`, refs, caching, transitions, or code splitting merely because they exist.
+不要为了“看起来性能更好”机械添加：
 
-## Priority
+- `memo`
+- `useMemo`
+- `useCallback`
+- `useRef`
+- 懒加载
+- 自建缓存
 
-### Critical
+## 当前项目技术适配
 
-- Start independent async work together and use `Promise.all`.
-- Avoid awaiting work that a branch may not need.
-- Lazy-load genuinely heavy route/feature boundaries.
-- Avoid broad barrel imports from large libraries when direct imports materially reduce bundles.
+### 服务端状态
 
-### High
+本项目统一使用 TanStack Query，不引入 SWR。
 
-- Use TanStack Query for server-state caching and request deduplication.
-- Use stable, structured query keys.
-- Do not implement duplicate fetch state manually with `useEffect + useState`.
+相同 Query Key 的数据请求、缓存、失效刷新和 Mutation 都交给 TanStack Query 管理，不要在 `useEffect` 中重新实现一套请求缓存逻辑。
 
-### Medium
+### Vite
 
-- Derive values during render instead of synchronizing derived state with effects.
-- Move interaction-specific work into event handlers.
-- Use lazy state initialization for expensive initial values.
-- Use functional state updates when based on previous state.
-- Do not define child components inside parent components.
-- Use refs for transient values that should not trigger rendering.
-- Use `startTransition`/`useDeferredValue` only for demonstrably expensive non-urgent UI.
+Next.js 专属的 Server Component、Server Action、`next/dynamic` 等规则不适用于本模板。
 
-### Low-Medium
+需要拆包时使用 React `lazy` + `Suspense` 和 Vite 的动态 import 能力。
 
-- Prefer `Set`/`Map` for repeated large lookups.
-- Return early before expensive work.
-- Avoid repeated storage reads in hot paths.
-- Use `content-visibility` for very long offscreen-rendered sections when appropriate.
+## 规则分类
 
-## Stack Adaptations
+- `async-*`：异步任务与请求瀑布
+- `bundle-*`：Bundle 与动态加载
+- `client-*`：客户端请求与缓存
+- `rerender-*`：React 重渲染
+- `rendering-*`：页面渲染成本
+- `js-*`：通用 JavaScript 性能
 
-The upstream skill mentions SWR and Next.js APIs. In this template:
+## 使用方式
 
-- SWR guidance becomes TanStack Query guidance.
-- `next/dynamic` becomes `React.lazy` + `Suspense` or Vite dynamic `import()`.
-- Next.js Server Actions, RSC serialization, `after()`, server caches, and API-route rules do not apply to this Vite SPA template.
+先确认问题，再查对应规则。例如：
 
-See individual rules in `rules/` for examples.
+- 页面首次打开很慢：优先检查 `async-*`、`bundle-*`
+- 同一个接口重复发送：检查 `client-query-dedup.md`
+- 输入时页面卡顿：检查 `rerender-*`
+- 超长列表滚动卡顿：检查 `rendering-content-visibility.md`
+
+性能优化完成后，仍然要优先保证代码可读性和后续维护成本。

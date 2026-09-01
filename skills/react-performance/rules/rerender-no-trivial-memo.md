@@ -1,3 +1,7 @@
-# Avoid Memoizing Trivial Work
+# 不要机械使用 memo / useMemo / useCallback
 
-Do not wrap cheap primitive calculations or every handler in `useMemo` / `useCallback`. Memoization has its own complexity and bookkeeping cost. Use it for measured expensive work or identity-sensitive APIs.
+只有在重复渲染或昂贵计算已经产生可观察成本时，才考虑缓存。
+
+对于简单值、简单函数和轻量组件，额外的 memo 化可能增加复杂度，却没有实际收益。
+
+优先先写清晰代码，再根据 React Profiler、真实交互表现或明确性能瓶颈决定是否优化。

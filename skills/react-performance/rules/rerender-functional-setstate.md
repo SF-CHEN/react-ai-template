@@ -1,9 +1,9 @@
-# Use Functional State Updates
+# 新状态依赖旧状态时使用函数式更新
 
-When next state depends on previous state:
+当下一次 state 依赖上一次 state 时，优先使用函数式写法，避免闭包中的旧值导致错误。
 
 ```tsx
 setCount((count) => count + 1)
 ```
 
-This avoids stale closures and makes update intent explicit.
+这种写法也能让事件处理逻辑更稳定、更容易复用。

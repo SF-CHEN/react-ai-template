@@ -1,3 +1,7 @@
-# Use Refs for Transient Non-visual Values
+# 不需要触发渲染的临时值使用 useRef
 
-For values such as timers, previous pointer positions, or mutable integration handles that should not cause rendering, prefer `useRef` over state.
+如果某个值需要跨渲染保存，但它的变化本身不应该触发页面重新渲染，可以考虑使用 `useRef`。
+
+典型场景包括定时器 ID、第三方实例、上一次值、拖拽过程中的高频临时数据等。
+
+如果这个值会直接影响 JSX 展示，就应该使用 state，而不是为了减少渲染强行塞进 ref。

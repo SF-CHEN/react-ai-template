@@ -1,14 +1,14 @@
-# Parallelize Independent Async Work
+# 并行执行互不依赖的异步任务
 
-When multiple operations do not depend on one another, start them together.
+多个操作彼此不依赖时，应尽量同时启动，避免形成不必要的请求瀑布。
 
 ```ts
-// Avoid
+// 不推荐：两个独立请求被串行执行
 const user = await getUser()
 const roles = await getRoles()
 
-// Prefer
+// 推荐：并行等待
 const [user, roles] = await Promise.all([getUser(), getRoles()])
 ```
 
-Do not use `Promise.all` when operation B genuinely depends on operation A.
+如果操作 B 确实依赖操作 A 的结果，就不要为了并行而强行使用 `Promise.all`。

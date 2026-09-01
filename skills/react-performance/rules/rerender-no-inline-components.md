@@ -1,3 +1,5 @@
-# Do Not Define Components Inside Components
+# 不要在组件内部定义组件
 
-Nested component declarations create a new component identity on every parent render and can reset child state. Define components at module scope unless a render callback API explicitly requires otherwise.
+不要在一个 React 组件的函数体内部再声明另一个组件。父组件每次渲染都会创建新的组件类型，容易导致子树状态丢失和额外重渲染。
+
+把子组件提升到模块作用域，或拆到单独文件中。

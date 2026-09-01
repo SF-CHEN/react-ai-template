@@ -51,7 +51,7 @@ export function UserFormDialog({
   useEffect(() => {
     if (!open) return
 
-    // React Hook Form owns internal form state; reset it when switching between create/edit records.
+    // React Hook Form 自己维护表单状态，因此新增/编辑记录切换时需要主动重置默认值
     form.reset(getDefaultValues(user))
   }, [form, open, user])
 
