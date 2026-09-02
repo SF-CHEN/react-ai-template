@@ -16,10 +16,11 @@ description: 当前模板的 UI 与交互规范。实现页面布局、shadcn/ui
 `src/components/ui/**` 是基础 UI 源码区。
 
 - shadcn/ui 已提供同类组件时优先直接使用或按官方源码同步。
-- 不重复维护第二套 Button、Dialog、Select、Dropdown、AlertDialog 等基础组件。
+- 不重复维护第二套 Button、Dialog、Select、Dropdown、AlertDialog、Pagination、Skeleton、Empty、Avatar 等基础组件。
 - `components/ui` 不要求 L3，尽量保持接近 shadcn 官方结构，方便以后同步。
 - shadcn 源码允许显式 `lucide-react` import；业务代码继续使用现有 `IconLucideXxx` 自动导入。
 - 需要原生 `<select>` 时使用明确命名的 NativeSelect；`Select` 名称保留给 shadcn 的弹出式 Select。
+- 多个页面重复出现的 Table 渲染壳、分页组合可以提升到 `components/common`；公共组合组件继续建立在 shadcn/ui 上，不重新实现基础视觉组件。
 
 ## 页面视觉基线
 
@@ -93,10 +94,16 @@ PageHeader
 Card
 ├─ CardHeader：列表标题 + 结果数量 / 局部刷新状态
 ├─ 筛选区：keyword / Select / 查询 / 重置
-├─ Table
-└─ 分页区
+├─ DataTable
+└─ DataPagination
 ```
 
+- 标准列表优先复用 `components/common/DataTable.tsx`，业务页面只定义 columns、业务 cell 和行操作。
+- 标准服务端分页优先复用 `components/common/DataPagination.tsx`，分页状态继续由 `useCrud` 管理。
+- `DataTable` 负责通用表头/行渲染、Skeleton、Error、Empty；不要在每个业务表格重复 `getHeaderGroups / getRowModel / FlexRender`。
+- 实体头像使用 shadcn `Avatar / AvatarFallback`，不要重复手写圆形头像容器。
+- 首次加载使用 shadcn `Skeleton`；空状态使用 shadcn `Empty`；分页使用 shadcn `Pagination`。
+- 业务列、特殊操作和特殊空状态仍留在页面附近，不把 `DataTable` 做成巨大万能配置器。
 - 筛选区与表格之间用背景层级或分隔线区分。
 - 搜索框较重要时可以使用前置搜索图标，但不要给所有输入框加装饰图标。
 - 当前存在筛选条件时提供“重置”，没有筛选时不要长期占一个无意义按钮。
@@ -155,8 +162,8 @@ React Hook Form 中使用 `Controller` 对接非原生 Select，不使用 `regis
 
 不要只处理成功态：
 
-- 首次加载：Loading / Skeleton；
-- 空数据：说明当前没有内容，并在合适时提供下一步操作；
+- 首次加载：优先使用 shadcn `Skeleton`；
+- 空数据：优先使用 shadcn `Empty`，说明当前没有内容，并在合适时提供下一步操作；
 - 请求失败：给出用户可理解的信息和重试入口；
 - 局部刷新：尽量保留已有内容，只显示轻量“刷新中”，避免整页闪烁。
 
@@ -187,14 +194,17 @@ React Hook Form 中使用 `Controller` 对接非原生 Select，不使用 `regis
 
 1. 先识别页面类型：Dashboard / List / Detail / Form / Settings。
 2. 优先复用当前项目已有页面结构，而不是重新发明布局。
-3. 使用现有 Card、Table、Select、Dialog、AlertDialog、PageHeader。
-4. 保持一个主操作，其余降级为 secondary / outline / ghost。
-5. 补齐 Loading / Empty / Error，再考虑装饰性优化。
-6. 页面完成后检查窄屏是否还能导航和操作。
+3. 使用现有 Card、Select、Dialog、AlertDialog、PageHeader；列表页优先复用 DataTable / DataPagination。
+4. Loading / Empty / Avatar / Pagination 优先使用现有 shadcn/ui 组件，不手写同职责基础结构。
+5. 保持一个主操作，其余降级为 secondary / outline / ghost。
+6. 补齐 Loading / Empty / Error，再考虑装饰性优化。
+7. 页面完成后检查窄屏是否还能导航和操作。
 
 ## 完成检查
 
 - 是否优先使用现有 shadcn/ui？
+- 标准列表是否复用了 DataTable / DataPagination，而不是重复渲染框架？
+- Skeleton / Empty / Avatar / Pagination 是否优先使用现有组件？
 - 页面是否有明确的标题、内容层级和主操作？
 - 页面宽度、留白、Card 密度是否与模板现有页面一致？
 - 是否存在同职责的自定义基础组件？
