@@ -6,6 +6,8 @@ import { formatDateTime } from '@/utils/format'
 interface UserTableProps {
   data: User[]
   loading?: boolean
+  error?: string
+  onRetry?: () => void
   onEdit: (user: User) => void
   onDelete: (user: User) => void | Promise<void>
 }
@@ -18,29 +20,54 @@ const roleLabels: Record<User['role'], string> = {
   auditor: '审核员',
 }
 
-export function UserTable({ data, loading = false, onEdit, onDelete }: UserTableProps) {
+function userInitial(user: User) {
+  return (user.displayName || user.username).trim().slice(0, 1).toUpperCase()
+}
+
+export function UserTable({
+  data,
+  loading = false,
+  error,
+  onRetry,
+  onEdit,
+  onDelete,
+}: UserTableProps) {
   const columns: Array<ColumnDef<typeof features, User>> = [
     {
       accessorKey: 'username',
-      header: '用户名',
+      header: '用户',
       cell: ({ row }) => (
-        <div>
-          <div className="font-medium">{row.original.displayName}</div>
-          <div className="text-xs text-muted-foreground">@{row.original.username}</div>
+        <div className="flex min-w-44 items-center gap-3">
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
+            {userInitial(row.original)}
+          </div>
+          <div className="min-w-0">
+            <div className="truncate font-medium text-foreground">{row.original.displayName}</div>
+            <div className="mt-0.5 truncate text-xs text-muted-foreground">@{row.original.username}</div>
+          </div>
         </div>
       ),
     },
-    { accessorKey: 'email', header: '邮箱' },
+    {
+      accessorKey: 'email',
+      header: '邮箱',
+      cell: ({ row }) => <span className="text-muted-foreground">{row.original.email}</span>,
+    },
     {
       accessorKey: 'role',
       header: '角色',
-      cell: ({ row }) => roleLabels[row.original.role],
+      cell: ({ row }) => (
+        <Badge variant={row.original.role === 'admin' ? 'default' : 'secondary'}>
+          {roleLabels[row.original.role]}
+        </Badge>
+      ),
     },
     {
       accessorKey: 'status',
       header: '状态',
       cell: ({ row }) => (
         <Badge variant={row.original.status === 'enabled' ? 'success' : 'secondary'}>
+          <span className="mr-1.5 size-1.5 rounded-full bg-current opacity-70" />
           {row.original.status === 'enabled' ? '启用' : '禁用'}
         </Badge>
       ),
@@ -48,7 +75,11 @@ export function UserTable({ data, loading = false, onEdit, onDelete }: UserTable
     {
       accessorKey: 'createdAt',
       header: '创建时间',
-      cell: ({ row }) => formatDateTime(row.original.createdAt),
+      cell: ({ row }) => (
+        <span className="whitespace-nowrap text-muted-foreground">
+          {formatDateTime(row.original.createdAt)}
+        </span>
+      ),
     },
     {
       id: 'actions',
@@ -94,13 +125,13 @@ export function UserTable({ data, loading = false, onEdit, onDelete }: UserTable
   })
 
   return (
-    <div className="rounded-lg border border-border">
+    <div className="overflow-hidden rounded-xl border border-border/80 bg-card">
       <Table>
-        <TableHeader>
+        <TableHeader className="bg-muted/40">
           {table.getHeaderGroups().map((headerGroup) => (
-            <TableRow key={headerGroup.id}>
+            <TableRow key={headerGroup.id} className="hover:bg-transparent">
               {headerGroup.headers.map((header) => (
-                <TableHead key={header.id}>
+                <TableHead key={header.id} className="h-10 text-xs font-semibold uppercase tracking-wide">
                   {header.isPlaceholder ? null : <table.FlexRender header={header} />}
                 </TableHead>
               ))}
@@ -109,14 +140,41 @@ export function UserTable({ data, loading = false, onEdit, onDelete }: UserTable
         </TableHeader>
         <TableBody>
           {loading ? (
-            <TableRow>
-              <TableCell colSpan={columns.length} className="h-28 text-center text-muted-foreground">
-                正在加载用户…
+            Array.from({ length: 5 }, (_, rowIndex) => (
+              <TableRow key={`loading-${rowIndex}`} className="hover:bg-transparent">
+                {columns.map((_, columnIndex) => (
+                  <TableCell key={`loading-${rowIndex}-${columnIndex}`}>
+                    <div
+                      className={
+                        columnIndex === 0
+                          ? 'h-9 w-36 animate-pulse rounded-md bg-muted'
+                          : 'h-4 w-20 animate-pulse rounded bg-muted'
+                      }
+                    />
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))
+          ) : error ? (
+            <TableRow className="hover:bg-transparent">
+              <TableCell colSpan={columns.length} className="h-48 text-center">
+                <div className="mx-auto flex max-w-sm flex-col items-center">
+                  <div className="flex size-10 items-center justify-center rounded-full bg-destructive/10 text-destructive">
+                    <IconLucideActivity className="size-5" />
+                  </div>
+                  <div className="mt-3 text-sm font-medium text-foreground">加载失败</div>
+                  <p className="mt-1 text-xs leading-5 text-muted-foreground">{error}</p>
+                  {onRetry ? (
+                    <Button variant="outline" size="sm" className="mt-3" onClick={onRetry}>
+                      重新加载
+                    </Button>
+                  ) : null}
+                </div>
               </TableCell>
             </TableRow>
           ) : table.getRowModel().rows.length ? (
             table.getRowModel().rows.map((row) => (
-              <TableRow key={row.id}>
+              <TableRow key={row.id} className="hover:bg-muted/30">
                 {row.getAllCells().map((cell) => (
                   <TableCell key={cell.id}>
                     <table.FlexRender cell={cell} />
@@ -125,9 +183,17 @@ export function UserTable({ data, loading = false, onEdit, onDelete }: UserTable
               </TableRow>
             ))
           ) : (
-            <TableRow>
-              <TableCell colSpan={columns.length} className="h-28 text-center text-muted-foreground">
-                暂无数据
+            <TableRow className="hover:bg-transparent">
+              <TableCell colSpan={columns.length} className="h-52 text-center">
+                <div className="mx-auto flex max-w-sm flex-col items-center">
+                  <div className="flex size-11 items-center justify-center rounded-full bg-muted text-muted-foreground">
+                    <IconLucideUsers className="size-5" />
+                  </div>
+                  <div className="mt-3 text-sm font-medium text-foreground">暂无匹配用户</div>
+                  <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                    可以调整搜索关键词或状态筛选条件后重新查询。
+                  </p>
+                </div>
               </TableCell>
             </TableRow>
           )}

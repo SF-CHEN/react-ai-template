@@ -31,6 +31,12 @@ export default function UserListPage() {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingUser, setEditingUser] = useState<User | null>(null)
 
+  useEffect(() => {
+    // 浏览器前进/后退会改变 URL，需要同步筛选草稿，避免界面显示与真实查询条件不一致
+    setDraftKeyword(keyword)
+    setDraftStatus(status ?? 'all')
+  }, [keyword, status])
+
   const listQuery = useUserList({ page, pageSize: PAGE_SIZE, keyword, status })
   const createMutation = useCreateUser()
   const updateMutation = useUpdateUser()
@@ -38,6 +44,7 @@ export default function UserListPage() {
 
   const total = listQuery.data?.total ?? 0
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
+  const hasActiveFilters = Boolean(keyword || status)
 
   const updateSearch = (next: { page?: number; keyword?: string; status?: string }) => {
     // 基于当前 URL 增量更新，避免翻页时丢失筛选条件或查询时误删其他参数
@@ -56,6 +63,17 @@ export default function UserListPage() {
   const handleSearch = () => {
     // 新筛选条件生效时回到第一页，避免原页码超过筛选后的总页数
     updateSearch({ page: 1, keyword: draftKeyword.trim(), status: draftStatus })
+  }
+
+  const handleReset = () => {
+    setDraftKeyword('')
+    setDraftStatus('all')
+
+    const params = new URLSearchParams(searchParams)
+    params.delete('page')
+    params.delete('keyword')
+    params.delete('status')
+    setSearchParams(params)
   }
 
   const handleCreate = () => {
@@ -86,10 +104,10 @@ export default function UserListPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 lg:space-y-8">
       <PageHeader
         title="用户管理"
-        description="CRUD 示例：TanStack Query + Table + React Hook Form + Zod。"
+        description="演示标准列表页结构：URL 筛选、服务端状态、表格、分页与新增编辑弹窗。"
         actions={
           <Button onClick={handleCreate}>
             <IconLucidePlus className="size-4" />
@@ -98,51 +116,86 @@ export default function UserListPage() {
         }
       />
 
-      <Card>
-        <CardContent className="space-y-4 p-5">
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
-            <Input
-              value={draftKeyword}
-              onChange={(event) => setDraftKeyword(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter') handleSearch()
-              }}
-              className="lg:max-w-sm"
-              placeholder="搜索用户名、姓名或邮箱"
-            />
-            <Select
-              items={userOptions.statusFilter}
-              value={draftStatus}
-              onValueChange={(value) => setDraftStatus(value ?? 'all')}
-            >
-              <SelectTrigger className="lg:w-36" aria-label="筛选用户状态">
-                <SelectValue placeholder="全部状态" />
-              </SelectTrigger>
-              <SelectContent>
-                {userOptions.statusFilter.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button variant="secondary" onClick={handleSearch}>
-              <IconLucideSearch className="size-4" />
-              查询
-            </Button>
+      <Card className="overflow-hidden border-border/80">
+        <CardHeader className="border-b border-border/70 pb-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <CardTitle>用户列表</CardTitle>
+            <CardDescription className="mt-1">
+              查询条件写入 URL，刷新页面或复制链接后仍能保持当前筛选结果。
+            </CardDescription>
+          </div>
+          <div className="mt-2 flex items-center gap-2 sm:mt-0">
+            {listQuery.isFetching && !listQuery.isLoading ? (
+              <span className="text-xs text-muted-foreground">正在刷新…</span>
+            ) : null}
+            <Badge variant="secondary">共 {total} 条</Badge>
+          </div>
+        </CardHeader>
+
+        <CardContent className="p-0">
+          <div className="border-b border-border/70 bg-muted/20 p-4 sm:p-5">
+            <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
+              <div className="relative flex-1 xl:max-w-md">
+                <IconLucideSearch className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  value={draftKeyword}
+                  onChange={(event) => setDraftKeyword(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter') handleSearch()
+                  }}
+                  className="bg-card pl-9"
+                  placeholder="搜索用户名、姓名或邮箱"
+                  aria-label="搜索用户"
+                />
+              </div>
+
+              <Select
+                items={userOptions.statusFilter}
+                value={draftStatus}
+                onValueChange={(value) => setDraftStatus(value ?? 'all')}
+              >
+                <SelectTrigger className="bg-card xl:w-40" aria-label="筛选用户状态">
+                  <SelectValue placeholder="全部状态" />
+                </SelectTrigger>
+                <SelectContent>
+                  {userOptions.statusFilter.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <div className="flex items-center gap-2 xl:ml-auto">
+                {hasActiveFilters ? (
+                  <Button variant="ghost" onClick={handleReset}>
+                    <IconLucideX className="size-4" />
+                    重置
+                  </Button>
+                ) : null}
+                <Button variant="secondary" onClick={handleSearch}>
+                  <IconLucideSearch className="size-4" />
+                  查询
+                </Button>
+              </div>
+            </div>
           </div>
 
-          <UserTable
-            data={listQuery.data?.list ?? []}
-            loading={listQuery.isLoading}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-          />
+          <div className="p-4 sm:p-5">
+            <UserTable
+              data={listQuery.data?.list ?? []}
+              loading={listQuery.isLoading}
+              error={listQuery.isError ? '用户列表加载失败，请稍后重试。' : undefined}
+              onRetry={() => void listQuery.refetch()}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+            />
+          </div>
 
-          <div className="flex flex-col gap-3 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-3 border-t border-border/70 px-4 py-3.5 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-5">
             <div>
-              共 {total} 条
-              {listQuery.isFetching && !listQuery.isLoading ? ' · 正在刷新…' : ''}
+              第 {page} 页，共 {totalPages} 页
+              {hasActiveFilters ? <span className="ml-2">· 当前为筛选结果</span> : null}
             </div>
             <div className="flex items-center gap-2">
               <Button
@@ -153,9 +206,9 @@ export default function UserListPage() {
               >
                 上一页
               </Button>
-              <span>
+              <div className="min-w-16 rounded-md bg-muted/60 px-3 py-1.5 text-center text-xs font-medium text-foreground">
                 {page} / {totalPages}
-              </span>
+              </div>
               <Button
                 variant="outline"
                 size="sm"
