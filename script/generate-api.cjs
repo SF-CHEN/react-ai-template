@@ -1,9 +1,9 @@
 /**
  * [INPUT]: 依赖 load-swagger.cjs 的标准化 OpenAPI schema，以及 src/api/request.ts 的 requestData 约定
- * [OUTPUT]: 生成 src/api/generated 下的 API 函数、DTO/参数类型，以及 meta 下的枚举和下拉选项
+ * [OUTPUT]: 生成 src/api/generated 下的 API 函数、DTO/参数类型，以及 meta 下的枚举和中文优先下拉选项
  * [POS]: script 的 API 代码生成器，将后端 OpenAPI 描述转换为当前 React 模板可直接使用的 TypeScript API
  * [PROTOCOL]: 变更时同步更新此头部，并检查 AGENTS.md、react-data、typescript 与 code-comments Skill
- * [TIME]: 2026-09-02 02:28:27
+ * [TIME]: 2026-09-02 02:35:46
  */
 const fs = require('node:fs')
 const path = require('node:path')
@@ -258,24 +258,118 @@ function generateApiFile(moduleName, context) {
   })}\n${typeImport}import { requestData } from '@/api/request'\n\n${context.functions.join('\n\n')}\n`
 }
 
+function hasChinese(value) {
+  return /[\u3400-\u9fff]/.test(String(value || ''))
+}
+
+function normalizeEnumLabelSource(source, values) {
+  if (Array.isArray(source) && source.length === values.length) {
+    return source.map((label, index) => String(label || values[index]).trim() || String(values[index]))
+  }
+
+  if (source && typeof source === 'object' && !Array.isArray(source)) {
+    const labels = values.map(value => source[value] ?? source[String(value)])
+    if (labels.every(label => label !== undefined && label !== null && String(label).trim())) {
+      return labels.map(label => String(label).trim())
+    }
+  }
+
+  return null
+}
+
+function cleanEnumDescriptionSegment(segment) {
+  const cleaned = String(segment || '')
+    .replace(/["'`]/g, ' ')
+    .replace(/[,:：;；/|，、]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+
+  if (!cleaned) return ''
+
+  // Swagger 2 常见“任务类型 模型测评任务 MODELEVALTASK ...”，取枚举值前最后一段中文说明。
+  const chineseParts = cleaned.match(/[\u3400-\u9fff][\u3400-\u9fffA-Za-z0-9（）()·-]*/g)
+  if (chineseParts?.length) return chineseParts.at(-1)
+
+  return cleaned.split(' ').filter(Boolean).at(-1) || ''
+}
+
+function labelsFromDescription(description, values) {
+  if (!description || !values.length) return null
+
+  const text = String(description)
+  const labels = []
+  let cursor = 0
+
+  for (const value of values) {
+    const token = String(value)
+    const index = text.indexOf(token, cursor)
+    if (index === -1) return null
+
+    const label = cleanEnumDescriptionSegment(text.slice(cursor, index))
+    labels.push(label || token)
+    cursor = index + token.length
+  }
+
+  // 只有 description 明确给出多项中文对应关系时才采用，避免把“任务状态”误当成 FAIL 的中文标签。
+  const chineseCount = labels.filter(hasChinese).length
+  if (values.length > 1 && chineseCount === 1) return null
+
+  return labels
+}
+
+function enumOptionLabels(property) {
+  const values = property.enum || []
+  const candidates = [
+    normalizeEnumLabelSource(property['x-enum-descriptions'], values),
+    normalizeEnumLabelSource(property['x-enumDescriptions'], values),
+    normalizeEnumLabelSource(property['x-enum-labels'], values),
+    normalizeEnumLabelSource(property['x-enumLabels'], values),
+    labelsFromDescription(property.description, values),
+    normalizeEnumLabelSource(property['x-enum-varnames'], values),
+    normalizeEnumLabelSource(property['x-enumNames'], values),
+    normalizeEnumLabelSource(property['x-enum-names'], values),
+  ].filter(Boolean)
+
+  // 优先选择中文覆盖最多的 Swagger 自带说明；没有中文说明时再使用英文说明。
+  const chineseCandidate = candidates
+    .map(labels => ({ labels, score: labels.filter(hasChinese).length }))
+    .filter(item => item.score > 0)
+    .sort((a, b) => b.score - a.score)[0]
+
+  return chineseCandidate?.labels || candidates[0] || values.map(String)
+}
+
 function collectEnums(schemas) {
   const result = []
-  const signatures = new Set()
+  const bySignature = new Map()
 
   for (const [schemaName, schema] of Object.entries(schemas)) {
     for (const [propertyName, property] of Object.entries(schema?.properties || {})) {
       if (!property.enum?.length) continue
 
-      // 相同值集合只生成一份，避免多个 DTO 重复产生完全一致的前端枚举
       const signature = property.enum.map(String).sort().join('\0')
-      if (signatures.has(signature)) continue
-      signatures.add(signature)
+      const labels = enumOptionLabels(property)
+      const existing = bySignature.get(signature)
 
-      result.push({
+      // 相同值集合只生成一份；如果后出现的 schema 提供了更多中文说明，则升级 options 的 label。
+      if (existing) {
+        const currentChineseCount = existing.labels.filter(hasChinese).length
+        const nextChineseCount = labels.filter(hasChinese).length
+        if (nextChineseCount > currentChineseCount) {
+          existing.labels = labels
+          existing.description = property.description || existing.description
+        }
+        continue
+      }
+
+      const item = {
         typeName: `${schemaName}${toPascalCase(propertyName)}`,
         values: property.enum,
+        labels,
         description: property.description || `${schemaName}.${propertyName}`,
-      })
+      }
+      result.push(item)
+      bySignature.set(signature, item)
     }
   }
   return result
@@ -304,12 +398,12 @@ function writeEnumFiles(schemas) {
 
   const imports = enums.map(item => `${item.typeName}Enum`).join(', ')
   const optionBlocks = enums.map(item => {
-    const rows = item.values.map((value, index) => `  { label: ${tsString(value)}, value: ${item.typeName}Enum.${enumKey(value, index)} },`).join('\n')
+    const rows = item.values.map((value, index) => `  { label: ${tsString(item.labels[index] || value)}, value: ${item.typeName}Enum.${enumKey(value, index)} },`).join('\n')
     return `/** ${item.description} 下拉选项 */\nexport const ${item.typeName}Options = [\n${rows}\n] as const`
   })
   const optionsContent = `${generatedHeader({
-    input: '依赖 ./enums.ts 的自动生成枚举常量',
-    output: '对外提供 Select、Radio、Checkbox 可直接使用的 label/value 选项',
+    input: '依赖 OpenAPI 枚举说明和 ./enums.ts 的自动生成枚举常量',
+    output: '对外提供中文说明优先、英文回退的 Select、Radio、Checkbox label/value 选项',
     pos: 'src/api/generated/meta 的自动生成选项文件，与 enums.ts 保持一一对应',
   })}\nimport { ${imports} } from './enums'\n\n${optionBlocks.join('\n\n')}\n`
   fs.writeFileSync(path.join(META_DIR, 'options.ts'), optionsContent, 'utf-8')
