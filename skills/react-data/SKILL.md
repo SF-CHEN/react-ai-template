@@ -59,8 +59,10 @@ export async function getUserList(params: UserListParams) {
 script/
 ├── load-swagger.cjs
 ├── generate-api.cjs
+├── sync-options.cjs
+├── option-label-overrides.cjs
 ├── doc.cjs
-└── init-project.cjs
+└── init-project.ps1
 ```
 
 生成命令：
@@ -68,12 +70,13 @@ script/
 ```bash
 pnpm api:generate
 pnpm api:docs
+pnpm api:all
 ```
 
 Swagger 来源按优先级支持：
 
 - 命令行 `--url` / `--file`；
-- `.env` 中的 `SWAGGER_URL` / `SWAGGER_FILE`；
+- 环境文件中的 `SWAGGER_URL` / `SWAGGER_FILE`；
 - 本地缓存 `script/api.json`。
 
 生成结果统一放：
@@ -81,22 +84,32 @@ Swagger 来源按优先级支持：
 ```text
 src/api/generated/
 ├── <module>.ts
-├── <module>.types.ts
-├── enums.ts
-├── options.ts
-└── api.md
+├── types/
+│   └── <module>.ts
+└── meta/
+    ├── enums.ts
+    ├── options.ts
+    └── api.md
 ```
 
-这里是**生成代码专用例外**：为了隔离脚本产物，允许 API 与类型拆成 `<module>.ts + <module>.types.ts`，不要把这套结构机械应用到手写 API。
+这里是**生成代码专用结构**：自动生成 API 与类型可以拆开，但不要把 `generated/types` 的组织方式机械应用到普通手写 API。
 
 规则：
 
-- `src/api/generated` 由脚本维护，不把生成文件复制到 `pages`。
-- 完全生成的 `.types.ts` 不手改。
-- 带 `<generated>` 标记的文件只在 `</generated>` 后的自定义区域写人工扩展。
-- 生成文件属于 L3 豁免范围；手写 API 仍必须维护 L3。
+- `src/api/generated` 全部由脚本维护，不在生成文件内混入手写业务逻辑。
+- `<module>.ts` 只放 API 请求函数；DTO、Query Params、Request/Response 类型统一放 `types/<module>.ts`。
+- `enums.ts` 保持后端真实 enum value，不为了中文展示修改后端值。
+- `options.ts` 的 label 优先级为：人工 override → Swagger 中文说明 → Swagger 英文说明 → enum 原值。
+- Swagger `description` 支持明确的 `ENUM-中文说明` 配对，也支持数量与 enum 一致的中文顺序列表，例如“模型类型，分为内置模型和用户模型”。
+- 如果自动生成的 options label 不准确，**不要直接修改 `src/api/generated/meta/options.ts`**。
+- 人工或 AI 修正 label 时，统一修改 `script/option-label-overrides.cjs`；该文件不会被 `api:generate` / `api:all` 覆盖。
+- `api:generate` 会先生成 API / types / enums，再通过 `sync-options.cjs` 生成最终 options。
+- `api:all` 在 `api:generate` 的基础上继续生成 `meta/api.md`。
+- 生成的 `.ts` 文件由生成器自动维护 L3 文件头和 `[TIME]`；不要手工维护生成文件 L3。
 - `script/api.json` 是本地 Swagger 缓存，不提交真实接口文档到模板仓库。
 - 页面和 Query 使用生成 API 时仍保持显式 import。
+
+需要查看脚本细节时阅读 `script/README.md`。
 
 ## TanStack Query
 
@@ -215,4 +228,5 @@ const [roles, permissions] = await Promise.all([
 - 搜索/筛选/分页是否存在多份状态？
 - 是否用 `useEffect` 手工实现了 Query 已经提供的能力？
 - 生成代码是否只位于 `src/api/generated`？
-- 是否误改了完全生成的 `.types.ts`？
+- 是否直接修改了生成的 API、types、enums 或 options？
+- options label 修正是否写入了 `script/option-label-overrides.cjs`？
