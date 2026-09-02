@@ -98,16 +98,34 @@ Card
 └─ DataPagination
 ```
 
-- 标准列表优先复用 `components/common/DataTable.tsx`，业务页面只定义 columns、业务 cell 和行操作。
+- 标准 CRUD 优先复用 `components/common/DataTable.tsx`，columns 使用简单的 `label / prop / render / align` 配置。
+- 普通业务表格不要直接暴露 `ColumnDef / DataTableFeatures / row.original / getRowId` 等 TanStack Table 概念。
 - 标准服务端分页优先复用 `components/common/DataPagination.tsx`，分页状态继续由 `useCrud` 管理。
-- `DataTable` 负责通用表头/行渲染、Skeleton、Error、Empty；不要在每个业务表格重复 `getHeaderGroups / getRowModel / FlexRender`。
+- `DataTable` 只负责通用表头/行渲染、Skeleton、Error、Empty；业务列和行操作留在页面附近。
+- 只有明确需要列排序、行选择、列显隐、拖动列、复杂表头或其他高级表格能力时，才直接使用 TanStack Table。
 - 实体头像使用 shadcn `Avatar / AvatarFallback`，不要重复手写圆形头像容器。
 - 首次加载使用 shadcn `Skeleton`；空状态使用 shadcn `Empty`；分页使用 shadcn `Pagination`。
-- 业务列、特殊操作和特殊空状态仍留在页面附近，不把 `DataTable` 做成巨大万能配置器。
+- 不把 `DataTable` 做成巨大万能配置器；高级表格需求独立实现，不污染普通 CRUD API。
 - 筛选区与表格之间用背景层级或分隔线区分。
 - 搜索框较重要时可以使用前置搜索图标，但不要给所有输入框加装饰图标。
 - 当前存在筛选条件时提供“重置”，没有筛选时不要长期占一个无意义按钮。
 - 结果数量、刷新中等信息使用次要视觉层级，不与主操作竞争。
+
+普通 CRUD 推荐：
+
+```tsx
+const columns: DataTableColumn<User>[] = [
+  { label: '用户名', prop: 'username' },
+  { label: '邮箱', prop: 'email' },
+  {
+    label: '状态',
+    prop: 'status',
+    render: (row) => <Badge>{row.status}</Badge>,
+  },
+]
+
+<DataTable columns={columns} data={data} rowKey="id" />
+```
 
 ## 操作层级
 
@@ -150,6 +168,7 @@ React Hook Form 中使用 `Controller` 对接非原生 Select，不使用 `regis
 
 - 表头文案简短明确，表头视觉权重低于数据正文。
 - 操作列通常右对齐。
+- 普通 CRUD 列配置优先保持 `label / prop / render` 简单形式，不为了“统一”强制使用 TanStack Table 类型。
 - 用户/实体主字段可使用“主标题 + 次要标识”组合，例如姓名 + username。
 - 状态使用 Badge，而不是只靠颜色文本。
 - 时间、邮箱等次要信息可以使用 muted foreground，降低视觉噪音。
@@ -194,16 +213,18 @@ React Hook Form 中使用 `Controller` 对接非原生 Select，不使用 `regis
 
 1. 先识别页面类型：Dashboard / List / Detail / Form / Settings。
 2. 优先复用当前项目已有页面结构，而不是重新发明布局。
-3. 使用现有 Card、Select、Dialog、AlertDialog、PageHeader；列表页优先复用 DataTable / DataPagination。
-4. Loading / Empty / Avatar / Pagination 优先使用现有 shadcn/ui 组件，不手写同职责基础结构。
-5. 保持一个主操作，其余降级为 secondary / outline / ghost。
-6. 补齐 Loading / Empty / Error，再考虑装饰性优化。
-7. 页面完成后检查窄屏是否还能导航和操作。
+3. 使用现有 Card、Select、Dialog、AlertDialog、PageHeader；普通列表页优先复用简单 DataTable / DataPagination。
+4. 普通 CRUD 不引入 TanStack Table 的 ColumnDef 等复杂 API；只有高级表格需求才启用。
+5. Loading / Empty / Avatar / Pagination 优先使用现有 shadcn/ui 组件，不手写同职责基础结构。
+6. 保持一个主操作，其余降级为 secondary / outline / ghost。
+7. 补齐 Loading / Empty / Error，再考虑装饰性优化。
+8. 页面完成后检查窄屏是否还能导航和操作。
 
 ## 完成检查
 
 - 是否优先使用现有 shadcn/ui？
-- 标准列表是否复用了 DataTable / DataPagination，而不是重复渲染框架？
+- 标准列表是否复用了简单 DataTable / DataPagination？
+- 普通 CRUD 是否错误暴露了 TanStack Table 的复杂类型/API？
 - Skeleton / Empty / Avatar / Pagination 是否优先使用现有组件？
 - 页面是否有明确的标题、内容层级和主操作？
 - 页面宽度、留白、Card 密度是否与模板现有页面一致？

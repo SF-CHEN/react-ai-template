@@ -1,9 +1,3 @@
-import {
-  tableFeatures,
-  useTable,
-  type ColumnDef,
-  type RowData,
-} from '@tanstack/react-table'
 import { DatabaseIcon, TriangleAlertIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
 
@@ -25,59 +19,102 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { cn } from '@/utils/cn'
 
-const features = tableFeatures({})
+export interface DataTableColumn<TData> {
+  label: ReactNode
+  prop?: keyof TData
+  key?: string
+  width?: string | number
+  align?: 'left' | 'center' | 'right'
+  className?: string
+  headerClassName?: string
+  render?: (row: TData, index: number) => ReactNode
+}
 
-export type DataTableFeatures = typeof features
-export type DataTableColumn<TData extends RowData> = ColumnDef<DataTableFeatures, TData>
-
-interface DataTableProps<TData extends RowData> {
+interface DataTableProps<TData> {
   columns: DataTableColumn<TData>[]
   data: TData[]
+  rowKey: keyof TData | ((row: TData, index: number) => string | number)
   loading?: boolean
   error?: string
   onRetry?: () => void
-  emptyState?: ReactNode
-  getRowId?: (row: TData, index: number) => string
+  emptyTitle?: string
+  emptyDescription?: string
+  emptyIcon?: ReactNode
 }
 
-export function DataTable<TData extends RowData>({
+const alignClass = {
+  left: 'text-left',
+  center: 'text-center',
+  right: 'text-right',
+} as const
+
+function renderValue(value: unknown) {
+  if (value == null) return null
+  if (typeof value === 'string' || typeof value === 'number') return value
+  if (typeof value === 'boolean') return value ? '是' : '否'
+  return String(value)
+}
+
+function getColumnKey<TData>(column: DataTableColumn<TData>, index: number) {
+  return column.key ?? String(column.prop ?? index)
+}
+
+function getRowKey<TData>(
+  row: TData,
+  index: number,
+  rowKey: DataTableProps<TData>['rowKey'],
+) {
+  const value = typeof rowKey === 'function' ? rowKey(row, index) : row[rowKey]
+  return typeof value === 'string' || typeof value === 'number' ? value : String(value)
+}
+
+export function DataTable<TData>({
   columns,
   data,
+  rowKey,
   loading = false,
   error,
   onRetry,
-  emptyState,
-  getRowId,
+  emptyTitle = '暂无数据',
+  emptyDescription = '当前没有可展示的数据。',
+  emptyIcon = <DatabaseIcon />,
 }: DataTableProps<TData>) {
-  const table = useTable({
-    features,
-    columns,
-    data,
-    getRowId,
-  })
-
   return (
     <div className="overflow-hidden rounded-xl border border-border/80 bg-card">
       <Table>
         <TableHeader className="bg-muted/40">
-          {table.getHeaderGroups().map((headerGroup) => (
-            <TableRow key={headerGroup.id} className="hover:bg-transparent">
-              {headerGroup.headers.map((header) => (
-                <TableHead key={header.id} className="h-10 text-xs font-semibold uppercase tracking-wide">
-                  {header.isPlaceholder ? null : <table.FlexRender header={header} />}
+          <TableRow className="hover:bg-transparent">
+            {columns.map((column, index) => {
+              const align = column.align ?? 'left'
+
+              return (
+                <TableHead
+                  key={getColumnKey(column, index)}
+                  className={cn(
+                    'h-10 text-xs font-semibold uppercase tracking-wide',
+                    alignClass[align],
+                    column.headerClassName,
+                  )}
+                  style={{ width: column.width }}
+                >
+                  {column.label}
                 </TableHead>
-              ))}
-            </TableRow>
-          ))}
+              )
+            })}
+          </TableRow>
         </TableHeader>
 
         <TableBody>
           {loading ? (
             Array.from({ length: 5 }, (_, rowIndex) => (
               <TableRow key={`loading-${rowIndex}`} className="hover:bg-transparent">
-                {columns.map((_, columnIndex) => (
-                  <TableCell key={`loading-${rowIndex}-${columnIndex}`}>
+                {columns.map((column, columnIndex) => (
+                  <TableCell
+                    key={`${getColumnKey(column, columnIndex)}-${rowIndex}`}
+                    className={cn(alignClass[column.align ?? 'left'], column.className)}
+                  >
                     <Skeleton className={columnIndex === 0 ? 'h-9 w-36' : 'h-4 w-20'} />
                   </TableCell>
                 ))}
@@ -104,30 +141,37 @@ export function DataTable<TData extends RowData>({
                 </Empty>
               </TableCell>
             </TableRow>
-          ) : table.getRowModel().rows.length ? (
-            table.getRowModel().rows.map((row) => (
-              <TableRow key={row.id} className="hover:bg-muted/30">
-                {row.getAllCells().map((cell) => (
-                  <TableCell key={cell.id}>
-                    <table.FlexRender cell={cell} />
-                  </TableCell>
-                ))}
+          ) : data.length ? (
+            data.map((row, rowIndex) => (
+              <TableRow key={getRowKey(row, rowIndex, rowKey)} className="hover:bg-muted/30">
+                {columns.map((column, columnIndex) => {
+                  const content = column.render
+                    ? column.render(row, rowIndex)
+                    : column.prop
+                      ? renderValue(row[column.prop])
+                      : null
+
+                  return (
+                    <TableCell
+                      key={getColumnKey(column, columnIndex)}
+                      className={cn(alignClass[column.align ?? 'left'], column.className)}
+                    >
+                      {content}
+                    </TableCell>
+                  )
+                })}
               </TableRow>
             ))
           ) : (
             <TableRow className="hover:bg-transparent">
               <TableCell colSpan={columns.length} className="h-52 p-0 text-center">
-                {emptyState ?? (
-                  <Empty className="min-h-52">
-                    <EmptyHeader>
-                      <EmptyMedia variant="icon">
-                        <DatabaseIcon />
-                      </EmptyMedia>
-                      <EmptyTitle>暂无数据</EmptyTitle>
-                      <EmptyDescription>当前没有可展示的数据。</EmptyDescription>
-                    </EmptyHeader>
-                  </Empty>
-                )}
+                <Empty className="min-h-52">
+                  <EmptyHeader>
+                    <EmptyMedia variant="icon">{emptyIcon}</EmptyMedia>
+                    <EmptyTitle>{emptyTitle}</EmptyTitle>
+                    <EmptyDescription>{emptyDescription}</EmptyDescription>
+                  </EmptyHeader>
+                </Empty>
               </TableCell>
             </TableRow>
           )}
