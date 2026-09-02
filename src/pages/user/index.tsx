@@ -115,7 +115,7 @@ export default function UserListPage() {
               value={draftStatus}
               onValueChange={(value) => setDraftStatus(value ?? 'all')}
             >
-              <SelectTrigger className="lg:w-36">
+              <SelectTrigger className="lg:w-36" aria-label="筛选用户状态">
                 <SelectValue placeholder="全部状态" />
               </SelectTrigger>
               <SelectContent>

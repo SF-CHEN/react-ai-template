@@ -90,11 +90,12 @@ export function UserFormDialog({
                   <Select
                     items={userOptions.role}
                     value={field.value}
+                    inputRef={field.ref}
                     onValueChange={(value) => {
                       if (value) field.onChange(value)
                     }}
                   >
-                    <SelectTrigger id="role">
+                    <SelectTrigger id="role" onBlur={field.onBlur}>
                       <SelectValue placeholder="请选择角色" />
                     </SelectTrigger>
                     <SelectContent>
@@ -118,11 +119,12 @@ export function UserFormDialog({
                   <Select
                     items={userOptions.status}
                     value={field.value}
+                    inputRef={field.ref}
                     onValueChange={(value) => {
                       if (value) field.onChange(value)
                     }}
                   >
-                    <SelectTrigger id="status">
+                    <SelectTrigger id="status" onBlur={field.onBlur}>
                       <SelectValue placeholder="请选择状态" />
                     </SelectTrigger>
                     <SelectContent>
