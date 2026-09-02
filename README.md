@@ -47,8 +47,11 @@ src/
 
 script/
 ├── generate-api.cjs
+├── sync-options.cjs
+├── option-label-overrides.cjs
 ├── load-swagger.cjs
 ├── doc.cjs
+├── README.md
 └── init-project.ps1
 ```
 
@@ -134,7 +137,7 @@ npm run api:docs
 npm run api:all
 ```
 
-`api:all` 会依次生成 API / TypeScript 类型 / enums / options，然后生成 `api.md`。
+`api:generate` 会先生成 API / TypeScript 类型 / enums，再通过 `sync-options.cjs` 同步最终 options；`api:all` 会在此基础上继续生成 `api.md`。
 
 也可以临时指定地址或文件：
 
@@ -161,11 +164,15 @@ src/api/generated/
 - `<module>.ts` 只放类型安全的 API 请求函数。
 - DTO、Query Params、Request/Response 等 TypeScript 类型统一放 `types/<module>.ts`，不与请求函数混写。
 - `enums.ts`、`options.ts` 和 `api.md` 统一放 `meta/`，集中存放生成辅助信息。
-- `options.ts` 的 `label` 优先读取 Swagger/OpenAPI 自带的中文枚举说明，包括常见 `x-enum-*` 描述和可明确配对的 `description`；没有中文说明时回退英文说明，再没有则使用 enum 原值。`value` 始终保持后端真实 enum 值。
+- `options.ts` 的 `label` 优先使用 `script/option-label-overrides.cjs` 的人工覆盖；没有覆盖时再读取 Swagger/OpenAPI 自带中文枚举说明、明确的 `ENUM-中文说明` 映射或数量一致的中文顺序列表；仍无法确定时回退英文说明或 enum 原值。
+- `value` 始终保持后端真实 enum 值，不因为展示中文而修改。
+- 如果自动生成 label 不准确，不直接修改 `src/api/generated/meta/options.ts`，而是修改 `script/option-label-overrides.cjs`；该文件不会被 `api:generate` 或 `api:all` 覆盖。
 - API 请求统一调用 `src/api/request.ts` 的 `requestData<T>()`。
 - generated API、类型和常量自动带 L3 文件头，并在每次生成时刷新 `[TIME]`。
 - generated 目录由脚本维护；需要业务语义封装时，在 `src/api/*.ts` 新建手写文件。
 - `script/api.json` 只是本地 Swagger 缓存，已加入 `.gitignore`。
+
+更详细的生成和 label 覆盖说明见 `script/README.md`。
 
 使用 pnpm 时同样可以执行 `pnpm api:generate`、`pnpm api:docs`、`pnpm api:all`。
 
