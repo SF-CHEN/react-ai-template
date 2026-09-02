@@ -54,6 +54,28 @@ script/
 
 简单页面不要预先创建 `api / hooks / query / schemas / types / components / pages` 七八层目录。所有后端接口统一放 `src/api/`，页面复杂后再按需增加子目录。
 
+## 环境配置
+
+模板直接保留三份可提交的非敏感环境配置：
+
+```text
+.env                所有模式共享默认值
+.env.development    开发环境覆盖
+.env.production     生产环境覆盖
+```
+
+Vite 会按当前 mode 自动合并配置，mode 文件覆盖 `.env` 中的同名变量。
+
+敏感值、个人地址和本机覆盖不要写进上述文件，统一放：
+
+```text
+.env.local
+.env.development.local
+.env.production.local
+```
+
+`*.local` 已加入 `.gitignore`。模板不再保留 `.env.example`。
+
 ## 自动导入
 
 项目使用 `unplugin-auto-import` 和 `unplugin-icons`。
@@ -93,44 +115,56 @@ Lucide 图标（IconLucideXxx）
 
 模板内置 Swagger 2.0 / OpenAPI 3.x 生成脚本，不新增额外 npm 依赖。
 
-在 `.env` 中配置：
+开发环境可以在 `.env.development` 配置：
 
 ```env
 SWAGGER_URL=http://localhost:8080/v3/api-docs
 ```
 
-然后执行：
+分别生成：
 
 ```bash
-pnpm api:generate
-pnpm api:docs
+npm run api:generate
+npm run api:docs
 ```
+
+一次生成全部内容：
+
+```bash
+npm run api:all
+```
+
+`api:all` 会依次生成 API / TypeScript 类型 / enums / options，然后生成 `api.md`。
 
 也可以临时指定地址或文件：
 
 ```bash
-pnpm api:generate -- --url=http://localhost:8080/v3/api-docs
-pnpm api:generate -- --file=script/api.json
+npm run api:generate -- --url=http://localhost:8080/v3/api-docs
+npm run api:generate -- --file=script/api.json
 ```
 
-生成结果统一放在：
+生成结果固定为：
 
 ```text
 src/api/generated/
-├── <module>.ts
+├── user.ts
 ├── types/
-│   └── <module>.ts
+│   └── user.ts
 ├── enums.ts
 ├── options.ts
 └── api.md
 ```
 
-规则：
+生成规则：
 
+- `<module>.ts` 只放类型安全的 API 请求函数。
+- DTO、Query Params、Request/Response 等 TypeScript 类型统一放 `types/<module>.ts`，不与请求函数混写。
 - API 请求统一调用 `src/api/request.ts` 的 `requestData<T>()`。
 - generated API、类型和常量自动带 L3 文件头，并在每次生成时刷新 `[TIME]`。
-- generated 目录主要由脚本维护；需要业务语义封装时，在 `src/api/*.ts` 新建手写文件，不把页面逻辑塞进生成文件。
+- generated 目录由脚本维护；需要业务语义封装时，在 `src/api/*.ts` 新建手写文件。
 - `script/api.json` 只是本地 Swagger 缓存，已加入 `.gitignore`。
+
+使用 pnpm 时同样可以执行 `pnpm api:generate`、`pnpm api:docs`、`pnpm api:all`。
 
 ## 项目初始化脚本
 
@@ -141,7 +175,7 @@ pnpm init:project
 pnpm init:project -- -ProjectTitle 中文项目标题
 ```
 
-脚本只更新当前模板真实存在的 `package.json` name 与 `index.html` title，不再包含 Vue 项目的 `index.vue`、`cache-key.ts` 等旧路径。
+脚本只更新当前模板真实存在的 `package.json` name 与 `index.html` title。
 
 ## AI 工作原则
 
@@ -184,7 +218,7 @@ pnpm build
 - URL 搜索、筛选、分页状态示例
 - 路由级懒加载示例
 
-用户接口目前使用内存 Mock，方便模板在没有后端时展示完整流程。接入真实后端时可以继续保留手写 `src/api/user.ts`，也可以通过 `src/api/generated` 调用自动生成接口。
+用户接口目前使用内存 Mock。接入真实后端时可以继续保留手写 `src/api/user.ts`，也可以通过 `src/api/generated` 调用自动生成接口。
 
 ## AI 开发规范
 

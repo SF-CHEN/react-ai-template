@@ -16,6 +16,7 @@
     "test:run": "vitest run",
     "api:generate": "node script/generate-api.cjs",
     "api:docs": "node script/doc.cjs",
+    "api:all": "node script/generate-api.cjs && node script/doc.cjs",
     "init:project": "powershell -ExecutionPolicy Bypass -File script/init-project.ps1"
   },
   "dependencies": {
