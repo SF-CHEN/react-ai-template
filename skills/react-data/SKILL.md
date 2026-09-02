@@ -12,8 +12,10 @@ description: 当前模板的数据访问和状态管理规范。编写 API、标
 | 后端返回的数据 | TanStack Query |
 | 全局客户端状态 | Zustand |
 | 当前组件 UI 状态 | React state |
+| 普通 CRUD 搜索 / 筛选 | 页面 React state |
+| 标准 CRUD 分页 | `useCrud` |
 | 表单字段 | React Hook Form |
-| 可分享、刷新后保留的搜索/筛选/分页 | URL Search Params |
+| 明确需要分享、刷新保留或前进/后退恢复的查询条件 | URL Search Params |
 
 同一份状态不要同时维护多个真实来源。
 
@@ -56,12 +58,12 @@ export const userService = {
 普通列表管理页默认使用 `src/hooks/useCrud.ts`，不要每个页面重复包装 `useList / useCreate / useUpdate / useDelete`。
 
 ```ts
-const crud = useCrud(userService, {
-  page,
-  pageSize: 10,
-  keyword,
-  status,
+const [filters, setFilters] = useState({
+  keyword: '',
+  status: undefined,
 })
+
+const crud = useCrud(userService, filters)
 ```
 
 页面直接消费：
@@ -69,6 +71,14 @@ const crud = useCrud(userService, {
 ```ts
 crud.data
 crud.total
+crud.page
+crud.pageSize
+crud.totalPages
+crud.hasPrevPage
+crud.hasNextPage
+crud.prevPage()
+crud.nextPage()
+crud.setPage(1)
 crud.create()
 crud.edit(row)
 crud.submit(values)
@@ -80,13 +90,43 @@ crud.isFetching
 `useCrud` 只负责标准重复流程：
 
 - 列表 Query 与缓存 key；
+- `page / pageSize / total / totalPages`；
+- 上一页、下一页、设置页码、设置每页条数；
 - 新增、编辑、删除 Mutation；
 - 成功后的列表缓存刷新；
+- 删除当前页最后一条时回到上一页；
 - 新增/编辑弹窗状态；
 - 当前编辑项；
 - 提交与删除动作。
 
-页面仍负责自己的筛选 UI、表格列、表单 UI、业务状态和特殊交互，不把整个页面塞进万能 CRUD 配置。
+页面仍负责自己的业务筛选 UI、表格列、表单 UI 和特殊交互，不把整个页面塞进万能 CRUD 配置。
+
+### 筛选与分页边界
+
+普通 CRUD 默认：
+
+```text
+页面
+├─ keyword
+├─ status
+├─ dateRange
+└─ 其他业务筛选
+
+useCrud
+├─ page
+├─ pageSize
+├─ total
+└─ totalPages
+```
+
+应用新的筛选条件时回到第一页：
+
+```ts
+setFilters(nextFilters)
+crud.setPage(1)
+```
+
+不要在每个页面重复维护 `PAGE_SIZE / totalPages / prevPage / nextPage`。
 
 ### 提交参数
 
@@ -174,11 +214,16 @@ src/api/generated/
 
 ## URL 查询状态
 
-搜索、筛选、分页需要刷新保留或可分享时优先使用 URL Search Params。
+普通后台 CRUD 默认不使用 URL 保存筛选和分页。
 
-输入框的“草稿值”和“已提交查询值”可以分开：草稿放局部 state，真正查询条件来自 URL。
+只有下面需求明确存在时才使用 URL Search Params：
 
-不要同时维护：URL page + useState page + Zustand page。
+- 复制链接后需要恢复同一筛选结果；
+- 刷新页面必须保留查询条件；
+- 浏览器前进 / 后退需要恢复列表状态；
+- 产品本身就是搜索、日志、审计、监控等强查询页面。
+
+使用 URL 时仍然只保留一个真实来源，不要同时维护 `URL page + useCrud page + Zustand page`。
 
 ## Zustand
 
@@ -193,6 +238,9 @@ src/api/generated/
 ## 完成检查
 
 - 标准 CRUD 是否无意义重复写了四个 Query/Mutation Hook？
+- 普通 CRUD 是否重复维护了 page / pageSize / totalPages？
+- 普通 CRUD 是否无明确需求却把筛选和分页放进 URL？
+- 应用新筛选条件时是否回到第一页？
 - 表单与接口字段一致时是否直接提交整个 values？
 - 是否逐字段重复组装了本可直接透传的 payload？
 - 服务端数据是否错误放进 Zustand？

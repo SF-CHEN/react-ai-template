@@ -101,17 +101,20 @@ src/
 
 - 服务端状态：TanStack Query
 - 全局客户端状态：Zustand
-- 局部 UI 状态：React state
+- 局部 UI 与普通 CRUD 筛选条件：React state
 - 表单状态：React Hook Form
-- 需要分享或刷新后保留的搜索/筛选/分页：URL Search Params
+- 标准 CRUD 分页：`useCrud`
+- 明确需要分享链接、刷新保留或浏览器前进/后退恢复的查询条件：URL Search Params
 
 硬约束：
 
 - Axios 只在 `src/api` 使用，页面和 UI 组件不直接调用 Axios。
 - `src/api/request.ts` 负责 Axios 实例和基础请求能力。
-- 标准 CRUD 默认在 `src/api/<name>.ts` 导出一个 `service`，并在页面使用 `useCrud(service, params)`。
-- 标准 CRUD 的 Query Key、列表 Query、新增/编辑/删除 Mutation、缓存刷新和新增/编辑弹窗状态由 `useCrud` 统一处理。
+- 标准 CRUD 默认在 `src/api/<name>.ts` 导出一个 `service`，并在页面使用 `useCrud(service, filters)`。
+- 标准 CRUD 的 Query Key、列表 Query、新增/编辑/删除 Mutation、缓存刷新、分页和新增/编辑弹窗状态由 `useCrud` 统一处理。
+- 页面只保留自己的业务筛选条件；应用新筛选条件时调用 `crud.setPage(1)`。
 - **不要为每个普通 CRUD 页面重复创建 `useList / useCreate / useUpdate / useDelete` 四套 Hook。**
+- 普通后台 CRUD 默认不把搜索、筛选和分页写进 URL；只有存在明确持久化或分享需求时才使用 URL Search Params。
 - 只有复杂依赖查询、乐观更新、无限滚动、批量操作、特殊缓存策略或非标准流程时，才在页面附近创建 `<name>.query.ts` 并直接使用 TanStack Query。
 - 不把 Query 数据复制进 Zustand。
 - 不在 `useEffect` 中重新实现 TanStack Query 已提供的请求、缓存、去重和刷新能力。
@@ -188,6 +191,8 @@ pnpm check:deadcode
 - 页面直接调用 Axios；
 - 服务端列表无理由放进 Zustand；
 - 标准 CRUD 页面重复包装四套 Query/Mutation Hook；
+- 标准 CRUD 页面重复维护 page / pageSize / totalPages 等通用分页状态；
+- 普通 CRUD 无明确需求却为了“刷新保留”把筛选和分页全部塞进 URL；
 - 表单与接口字段一致却逐字段重新组装提交参数；
 - 可派生状态使用 `useEffect + useState`；
 - 无意义 memo / useMemo / useCallback；
