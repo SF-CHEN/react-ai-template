@@ -2,8 +2,6 @@
  * [INPUT]: 依赖 load-swagger.cjs 提供的标准化 OpenAPI schema
  * [OUTPUT]: 生成 src/api/generated/meta/api.md，汇总数据模型和接口清单
  * [POS]: script 的 API 文档生成器，为 AI 与开发者提供后端接口上下文
- * [PROTOCOL]: 变更时同步更新此头部，并检查 AGENTS.md、react-data 与 code-comments Skill
- * [TIME]: 2026-09-02 02:28:27
  */
 const fs = require('node:fs')
 const path = require('node:path')

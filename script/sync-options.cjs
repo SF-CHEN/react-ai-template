@@ -2,8 +2,6 @@
  * [INPUT]: 依赖 load-swagger.cjs 的标准化 OpenAPI schema、generate-api.cjs 生成的 enums.ts，以及 option-label-overrides.cjs 的人工覆盖配置
  * [OUTPUT]: 重新生成 src/api/generated/meta/options.ts，优先使用人工覆盖，其次使用 Swagger 中文说明，最后回退英文枚举值
  * [POS]: script 的 options 后处理器，解决自动中文匹配不完整和重新生成覆盖人工修正的问题
- * [PROTOCOL]: label 修正优先写入 option-label-overrides.cjs，key 使用最终 xxxOptions 变量名；变更时同步检查 README 与 react-data Skill
- * [TIME]: 2026-09-02 09:45:00
  */
 const fs = require('node:fs')
 const path = require('node:path')
@@ -12,11 +10,6 @@ const optionLabelOverrides = require('./option-label-overrides.cjs')
 
 const META_DIR = path.resolve(__dirname, '../src/api/generated/meta')
 const OPTIONS_FILE = path.join(META_DIR, 'options.ts')
-
-function formatTime(date = new Date()) {
-  const pad = value => String(value).padStart(2, '0')
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`
-}
 
 function toPascalCase(value) {
   return String(value || '')
@@ -195,8 +188,6 @@ function buildOptionsContent(enums) {
  * [INPUT]: 依赖 OpenAPI 枚举说明、./enums.ts 和 script/option-label-overrides.cjs 的人工 label 覆盖
  * [OUTPUT]: 对外提供人工覆盖优先、Swagger 中文说明其次、英文枚举值兜底的 Select、Radio、Checkbox 选项
  * [POS]: src/api/generated/meta 的自动生成选项文件，与 enums.ts 保持一一对应
- * [PROTOCOL]: 自动生成文件；label 修正请写入 script/option-label-overrides.cjs，并使用最终 xxxOptions 变量名作为 key
- * [TIME]: ${formatTime()}
  */
 import { ${imports} } from './enums'
 

@@ -2,8 +2,6 @@
 [INPUT]: 依赖项目根目录的 package.json、index.html，以及可选的 -ProjectTitle 参数
 [OUTPUT]: 根据当前文件夹名初始化 package name，并同步浏览器页面标题
 [POS]: script 的模板初始化工具，用于复制模板后的首次项目命名，不修改业务页面和目录结构
-[PROTOCOL]: 变更时同步更新此头部，并检查 AGENTS.md 与 react-project Skill
-[TIME]: 2026-09-02 08:40:00
 #>
 
 $ErrorActionPreference = "Stop"

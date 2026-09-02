@@ -2,8 +2,6 @@
  * [INPUT]: 依赖 Node.js fs/path、项目 .env、命令行参数或 Swagger/OpenAPI JSON 地址
  * [OUTPUT]: 对外提供 loadSwagger、版本识别、v2/v3 归一化和目录辅助函数
  * [POS]: script 的 OpenAPI 输入层，为 generate-api.cjs 与 doc.cjs 提供统一 schema
- * [PROTOCOL]: 变更时同步更新此头部，并检查 AGENTS.md 与相关 Skill
- * [TIME]: 2026-09-02 08:40:00
  */
 const fs = require('node:fs')
 const path = require('node:path')
