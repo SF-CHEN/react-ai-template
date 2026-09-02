@@ -1,9 +1,9 @@
 /**
  * [INPUT]: 依赖 load-swagger.cjs 的标准化 OpenAPI schema，以及 src/api/request.ts 的 requestData 约定
- * [OUTPUT]: 生成 src/api/generated 下的 API 函数、DTO/参数类型、枚举和下拉选项
+ * [OUTPUT]: 生成 src/api/generated 下的 API 函数、DTO/参数类型，以及 meta 下的枚举和下拉选项
  * [POS]: script 的 API 代码生成器，将后端 OpenAPI 描述转换为当前 React 模板可直接使用的 TypeScript API
  * [PROTOCOL]: 变更时同步更新此头部，并检查 AGENTS.md、react-data、typescript 与 code-comments Skill
- * [TIME]: 2026-09-02 08:40:00
+ * [TIME]: 2026-09-02 02:28:27
  */
 const fs = require('node:fs')
 const path = require('node:path')
@@ -11,6 +11,7 @@ const { ensureDir, loadSwagger } = require('./load-swagger.cjs')
 
 const OUTPUT_DIR = path.resolve(__dirname, '../src/api/generated')
 const TYPES_DIR = path.join(OUTPUT_DIR, 'types')
+const META_DIR = path.join(OUTPUT_DIR, 'meta')
 const HTTP_METHODS = new Set(['get', 'post', 'put', 'delete', 'patch'])
 const MODULE_PREFIXES = new Set(['api', 'temp', 'v1', 'v2', 'v3'])
 
@@ -297,9 +298,9 @@ function writeEnumFiles(schemas) {
   const enumContent = `${generatedHeader({
     input: '由 OpenAPI schema 中的 enum 字段生成',
     output: '对外提供后端枚举对应的常量对象与字面量联合类型',
-    pos: 'src/api/generated 的自动生成枚举文件，为页面和表单提供稳定枚举值',
+    pos: 'src/api/generated/meta 的自动生成枚举文件，为页面和表单提供稳定枚举值',
   })}\n\n${enumBlocks.join('\n\n')}\n`
-  fs.writeFileSync(path.join(OUTPUT_DIR, 'enums.ts'), enumContent, 'utf-8')
+  fs.writeFileSync(path.join(META_DIR, 'enums.ts'), enumContent, 'utf-8')
 
   const imports = enums.map(item => `${item.typeName}Enum`).join(', ')
   const optionBlocks = enums.map(item => {
@@ -309,9 +310,9 @@ function writeEnumFiles(schemas) {
   const optionsContent = `${generatedHeader({
     input: '依赖 ./enums.ts 的自动生成枚举常量',
     output: '对外提供 Select、Radio、Checkbox 可直接使用的 label/value 选项',
-    pos: 'src/api/generated 的自动生成选项文件，与 enums.ts 保持一一对应',
+    pos: 'src/api/generated/meta 的自动生成选项文件，与 enums.ts 保持一一对应',
   })}\nimport { ${imports} } from './enums'\n\n${optionBlocks.join('\n\n')}\n`
-  fs.writeFileSync(path.join(OUTPUT_DIR, 'options.ts'), optionsContent, 'utf-8')
+  fs.writeFileSync(path.join(META_DIR, 'options.ts'), optionsContent, 'utf-8')
 }
 
 async function main() {
@@ -331,6 +332,7 @@ async function main() {
   }
 
   ensureDir(TYPES_DIR)
+  ensureDir(META_DIR)
   for (const [moduleName, context] of modules) {
     fs.writeFileSync(path.join(TYPES_DIR, `${moduleName}.ts`), generateTypesFile(moduleName, context, schemas), 'utf-8')
     fs.writeFileSync(path.join(OUTPUT_DIR, `${moduleName}.ts`), generateApiFile(moduleName, context), 'utf-8')
