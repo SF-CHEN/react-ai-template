@@ -14,9 +14,9 @@
     "typecheck": "tsc -b --pretty false",
     "test": "vitest",
     "test:run": "vitest run",
-    "api:generate": "node script/generate-api.cjs",
+    "api:generate": "node script/generate-api.cjs && node script/sync-options.cjs",
     "api:docs": "node script/doc.cjs",
-    "api:all": "node script/generate-api.cjs && node script/doc.cjs",
+    "api:all": "node script/generate-api.cjs && node script/sync-options.cjs && node script/doc.cjs",
     "init:project": "powershell -ExecutionPolicy Bypass -File script/init-project.ps1"
   },
   "dependencies": {
