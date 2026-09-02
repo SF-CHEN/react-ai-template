@@ -1,15 +1,16 @@
 /**
- * [INPUT]: 依赖 React Hook Form、Zod Resolver、User 模型、userFormSchema 及自动导入的 Dialog/Form UI
+ * [INPUT]: 依赖 React Hook Form、Zod Resolver、User 模型、userFormSchema、userOptions 及自动导入的 Dialog/Form UI
  * [OUTPUT]: 对外提供 UserFormDialog 用户新增/编辑表单弹窗组件
  * [POS]: pages/user 的页面专用表单组件，由 index.tsx 控制打开状态并提交用户表单数据
  * [PROTOCOL]: 变更时同步更新此头部，并检查 AGENTS.md 与相关 Skill
- * [TIME]: 2026-09-01 17:41:04
+ * [TIME]: 2026-09-02 09:45:00
  */
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 
 import type { User } from '@/api/user'
 
+import { userOptions } from './user.options'
 import { userFormSchema, type UserFormData } from './user.schema'
 
 interface UserFormDialogProps {
@@ -92,17 +93,22 @@ export function UserFormDialog({
             <div className="grid gap-2">
               <Label htmlFor="role">角色</Label>
               <Select id="role" {...form.register('role')}>
-                <option value="admin">管理员</option>
-                <option value="user">普通用户</option>
-                <option value="auditor">审核员</option>
+                {userOptions.role.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
               </Select>
             </div>
 
             <div className="grid gap-2">
               <Label htmlFor="status">状态</Label>
               <Select id="status" {...form.register('status')}>
-                <option value="enabled">启用</option>
-                <option value="disabled">禁用</option>
+                {userOptions.status.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
               </Select>
             </div>
           </div>

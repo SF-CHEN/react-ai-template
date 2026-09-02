@@ -1,6 +1,6 @@
 ---
 name: react-data
-description: 当前模板的数据访问和状态管理规范。编写 API、TanStack Query、Mutation、Zustand、搜索筛选分页、Swagger 生成代码或缓存逻辑时使用。
+description: 当前模板的数据访问和状态管理规范。编写 API、TanStack Query、Mutation、Zustand、搜索筛选分页、Swagger 生成代码、options 或缓存逻辑时使用。
 ---
 
 # React 数据与状态 Skill
@@ -102,7 +102,8 @@ src/api/generated/
 - `options.ts` 的 label 优先级为：人工 override → Swagger 中文说明 → Swagger 英文说明 → enum 原值。
 - Swagger `description` 支持明确的 `ENUM-中文说明` 配对，也支持数量与 enum 一致的中文顺序列表，例如“模型类型，分为内置模型和用户模型”。
 - 如果自动生成的 options label 不准确，**不要直接修改 `src/api/generated/meta/options.ts`**。
-- 人工或 AI 修正 label 时，统一修改 `script/option-label-overrides.cjs`；该文件不会被 `api:generate` / `api:all` 覆盖。
+- 人工或 AI 修正 label 时，统一修改 `script/option-label-overrides.cjs`；第一层 key 必须与最终导出的 `xxxOptions` 变量名完全一致，第二层 key 使用后端 enum value。
+- override 只写自动生成错误的 label，不复制整份 options，也不存放纯前端固定选项。
 - `api:generate` 会先生成 API / types / enums，再通过 `sync-options.cjs` 生成最终 options。
 - `api:all` 在 `api:generate` 的基础上继续生成 `meta/api.md`。
 - 生成的 `.ts` 文件由生成器自动维护 L3 文件头和 `[TIME]`；不要手工维护生成文件 L3。
@@ -110,6 +111,58 @@ src/api/generated/
 - 页面和 Query 使用生成 API 时仍保持显式 import。
 
 需要查看脚本细节时阅读 `script/README.md`。
+
+## 页面 Options 与前端固定配置
+
+Options 按来源分开维护，但页面可以通过页面级聚合对象统一消费。
+
+### 后端 enum options
+
+来自 `src/api/generated/meta/options.ts`，由脚本生成，不手改。
+
+### 后端 label 修正
+
+来自 `script/option-label-overrides.cjs`，只修正生成错误的中文 label。
+
+### 纯前端固定 options
+
+例如性别、页面展示方式、前端固定筛选项，默认放在页面附近：
+
+```text
+src/pages/user/
+├── index.tsx
+├── UserFormDialog.tsx
+└── user.options.ts
+```
+
+页面自己的 `user.options.ts` 可以同时聚合生成 options 和前端固定 options：
+
+```ts
+import { UserRoleOptions } from '@/api/generated/meta/options'
+
+const sexOptions = [
+  { label: '男', value: 'male' },
+  { label: '女', value: 'female' },
+] as const
+
+export const userOptions = {
+  role: UserRoleOptions,
+  sex: sexOptions,
+} as const
+```
+
+页面只需要：
+
+```ts
+import { userOptions } from './user.options'
+
+userOptions.role
+userOptions.sex
+```
+
+推荐 `userOptions.role`，不要默认创建全局的 `options.userRole` 大对象。只有同一组选项被多个无直接关系的页面真实复用后，才提升到 `src/options/`。
+
+详细说明见 `docs/options.md`。
 
 ## TanStack Query
 
@@ -229,4 +282,5 @@ const [roles, permissions] = await Promise.all([
 - 是否用 `useEffect` 手工实现了 Query 已经提供的能力？
 - 生成代码是否只位于 `src/api/generated`？
 - 是否直接修改了生成的 API、types、enums 或 options？
-- options label 修正是否写入了 `script/option-label-overrides.cjs`？
+- options label 修正是否写入了 `script/option-label-overrides.cjs`，且 key 使用最终 `xxxOptions` 名？
+- 纯前端固定 options 是否优先放在页面自己的 `<page>.options.ts`？
