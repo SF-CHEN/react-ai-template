@@ -1,4 +1,5 @@
 import { userService, type UserStatus } from '@/api/user'
+import { DataPagination } from '@/components/common/DataPagination'
 import { PageHeader } from '@/components/common/PageHeader'
 
 import { UserFormDialog } from './UserFormDialog'
@@ -56,7 +57,7 @@ export default function UserListPage() {
           <div>
             <CardTitle>用户列表</CardTitle>
             <CardDescription className="mt-1">
-              筛选条件保留在当前页面状态，分页与增删改成功后的列表刷新由 useCrud 统一处理。
+              筛选条件保留在当前页面状态，表格状态和分页使用模板公共组件统一呈现。
             </CardDescription>
           </div>
           <div className="mt-2 flex items-center gap-2 sm:mt-0">
@@ -127,22 +128,12 @@ export default function UserListPage() {
             />
           </div>
 
-          <div className="flex flex-col gap-3 border-t border-border/70 px-4 py-3.5 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-5">
-            <div>
-              第 {crud.page} 页，共 {crud.totalPages} 页
-              {hasActiveFilters ? <span className="ml-2">· 当前为筛选结果</span> : null}
-            </div>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" disabled={!crud.hasPrevPage} onClick={crud.prevPage}>
-                上一页
-              </Button>
-              <div className="min-w-16 rounded-md bg-muted/60 px-3 py-1.5 text-center text-xs font-medium text-foreground">
-                {crud.page} / {crud.totalPages}
-              </div>
-              <Button variant="outline" size="sm" disabled={!crud.hasNextPage} onClick={crud.nextPage}>
-                下一页
-              </Button>
-            </div>
+          <div className="border-t border-border/70 px-4 py-3.5 sm:px-5">
+            <DataPagination
+              page={crud.page}
+              totalPages={crud.totalPages}
+              onPageChange={crud.setPage}
+            />
           </div>
         </CardContent>
       </Card>
