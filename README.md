@@ -150,15 +150,17 @@ src/api/generated/
 ├── user.ts
 ├── types/
 │   └── user.ts
-├── enums.ts
-├── options.ts
-└── api.md
+└── meta/
+    ├── enums.ts
+    ├── options.ts
+    └── api.md
 ```
 
 生成规则：
 
 - `<module>.ts` 只放类型安全的 API 请求函数。
 - DTO、Query Params、Request/Response 等 TypeScript 类型统一放 `types/<module>.ts`，不与请求函数混写。
+- `enums.ts`、`options.ts` 和 `api.md` 统一放 `meta/`，集中存放生成辅助信息。
 - API 请求统一调用 `src/api/request.ts` 的 `requestData<T>()`。
 - generated API、类型和常量自动带 L3 文件头，并在每次生成时刷新 `[TIME]`。
 - generated 目录由脚本维护；需要业务语义封装时，在 `src/api/*.ts` 新建手写文件。
