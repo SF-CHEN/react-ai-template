@@ -65,4 +65,5 @@ declare global {
   const IconLucideX: typeof import('~icons/lucide/x')['default']
 
   const useBoolean: typeof import('./hooks/useBoolean')['useBoolean']
+  const useCrud: typeof import('./hooks/useCrud')['useCrud']
 }

@@ -73,7 +73,7 @@ function wait(ms = 220) {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
-export async function getUserList(params: UserListParams): Promise<UserListResult> {
+async function getUserList(params: UserListParams): Promise<UserListResult> {
   await wait()
 
   const keyword = params.keyword?.trim().toLowerCase()
@@ -96,7 +96,7 @@ export async function getUserList(params: UserListParams): Promise<UserListResul
   }
 }
 
-export async function createUser(input: UserInput): Promise<User> {
+async function createUser(input: UserInput): Promise<User> {
   await wait()
 
   const nextId = Math.max(0, ...users.map((user) => user.id)) + 1
@@ -110,7 +110,7 @@ export async function createUser(input: UserInput): Promise<User> {
   return user
 }
 
-export async function updateUser(id: number, input: UserInput): Promise<User> {
+async function updateUser(id: number, input: UserInput): Promise<User> {
   await wait()
 
   const current = users.find((user) => user.id === id)
@@ -121,7 +121,15 @@ export async function updateUser(id: number, input: UserInput): Promise<User> {
   return updated
 }
 
-export async function deleteUser(id: number): Promise<void> {
+async function deleteUser(id: number): Promise<void> {
   await wait(160)
   users = users.filter((user) => user.id !== id)
+}
+
+export const userService = {
+  name: 'users',
+  list: getUserList,
+  create: createUser,
+  update: updateUser,
+  remove: deleteUser,
 }

@@ -1,20 +1,20 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Controller, useForm } from 'react-hook-form'
 
-import type { User } from '@/api/user'
+import type { User, UserInput } from '@/api/user'
 
 import { userOptions } from './user.options'
-import { userFormSchema, type UserFormData } from './user.schema'
+import { userFormSchema } from './user.schema'
 
 interface UserFormDialogProps {
   open: boolean
   user?: User | null
   submitting?: boolean
   onOpenChange: (open: boolean) => void
-  onSubmit: (values: UserFormData) => Promise<void>
+  onSubmit: (values: UserInput) => Promise<void>
 }
 
-function getDefaultValues(user?: User | null): UserFormData {
+function getDefaultValues(user?: User | null): UserInput {
   return {
     username: user?.username ?? '',
     displayName: user?.displayName ?? '',
@@ -31,7 +31,7 @@ export function UserFormDialog({
   onOpenChange,
   onSubmit,
 }: UserFormDialogProps) {
-  const form = useForm<UserFormData>({
+  const form = useForm<UserInput>({
     resolver: zodResolver(userFormSchema),
     defaultValues: getDefaultValues(user),
   })

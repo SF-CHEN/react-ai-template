@@ -1,13 +1,11 @@
 import { useSearchParams } from 'react-router'
 
-import type { User, UserStatus } from '@/api/user'
+import { userService, type UserStatus } from '@/api/user'
 import { PageHeader } from '@/components/common/PageHeader'
 
 import { UserFormDialog } from './UserFormDialog'
 import { UserTable } from './UserTable'
 import { userOptions } from './user.options'
-import { useCreateUser, useDeleteUser, useUpdateUser, useUserList } from './user.query'
-import type { UserFormData } from './user.schema'
 
 const PAGE_SIZE = 10
 
@@ -28,8 +26,6 @@ export default function UserListPage() {
   // 输入过程先保存在草稿状态，点击查询后再同步 URL，避免每次按键都触发列表请求
   const [draftKeyword, setDraftKeyword] = useState(keyword)
   const [draftStatus, setDraftStatus] = useState(status ?? 'all')
-  const [dialogOpen, setDialogOpen] = useState(false)
-  const [editingUser, setEditingUser] = useState<User | null>(null)
 
   useEffect(() => {
     // 浏览器前进/后退会改变 URL，需要同步筛选草稿，避免界面显示与真实查询条件不一致
@@ -37,13 +33,14 @@ export default function UserListPage() {
     setDraftStatus(status ?? 'all')
   }, [keyword, status])
 
-  const listQuery = useUserList({ page, pageSize: PAGE_SIZE, keyword, status })
-  const createMutation = useCreateUser()
-  const updateMutation = useUpdateUser()
-  const deleteMutation = useDeleteUser()
+  const crud = useCrud(userService, {
+    page,
+    pageSize: PAGE_SIZE,
+    keyword,
+    status,
+  })
 
-  const total = listQuery.data?.total ?? 0
-  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
+  const totalPages = Math.max(1, Math.ceil(crud.total / PAGE_SIZE))
   const hasActiveFilters = Boolean(keyword || status)
 
   const updateSearch = (next: { page?: number; keyword?: string; status?: string }) => {
@@ -61,7 +58,6 @@ export default function UserListPage() {
   }
 
   const handleSearch = () => {
-    // 新筛选条件生效时回到第一页，避免原页码超过筛选后的总页数
     updateSearch({ page: 1, keyword: draftKeyword.trim(), status: draftStatus })
   }
 
@@ -76,40 +72,13 @@ export default function UserListPage() {
     setSearchParams(params)
   }
 
-  const handleCreate = () => {
-    setEditingUser(null)
-    setDialogOpen(true)
-  }
-
-  const handleEdit = (user: User) => {
-    setEditingUser(user)
-    setDialogOpen(true)
-  }
-
-  const handleDelete = async (user: User) => {
-    await deleteMutation.mutateAsync(user.id)
-  }
-
-  const handleSubmit = async (values: UserFormData) => {
-    // 编辑和新增共用一个表单，只在提交阶段根据 editingUser 选择对应 Mutation
-    if (editingUser) {
-      await updateMutation.mutateAsync({ id: editingUser.id, input: values })
-    } else {
-      await createMutation.mutateAsync(values)
-    }
-
-    // 仅在请求成功后关闭并清空编辑态，失败时保留用户输入方便继续修改
-    setDialogOpen(false)
-    setEditingUser(null)
-  }
-
   return (
     <div className="space-y-6 lg:space-y-8">
       <PageHeader
         title="用户管理"
-        description="演示标准列表页结构：URL 筛选、服务端状态、表格、分页与新增编辑弹窗。"
+        description="标准 CRUD 示例：页面只保留查询条件、表格和表单，通用增删改查流程由 useCrud 负责。"
         actions={
-          <Button onClick={handleCreate}>
+          <Button onClick={crud.create}>
             <IconLucidePlus className="size-4" />
             新增用户
           </Button>
@@ -121,14 +90,14 @@ export default function UserListPage() {
           <div>
             <CardTitle>用户列表</CardTitle>
             <CardDescription className="mt-1">
-              查询条件写入 URL，刷新页面或复制链接后仍能保持当前筛选结果。
+              查询条件写入 URL，增删改成功后 useCrud 自动刷新列表缓存。
             </CardDescription>
           </div>
           <div className="mt-2 flex items-center gap-2 sm:mt-0">
-            {listQuery.isFetching && !listQuery.isLoading ? (
+            {crud.isFetching && !crud.isLoading ? (
               <span className="text-xs text-muted-foreground">正在刷新…</span>
             ) : null}
-            <Badge variant="secondary">共 {total} 条</Badge>
+            <Badge variant="secondary">共 {crud.total} 条</Badge>
           </div>
         </CardHeader>
 
@@ -183,12 +152,12 @@ export default function UserListPage() {
 
           <div className="p-4 sm:p-5">
             <UserTable
-              data={listQuery.data?.list ?? []}
-              loading={listQuery.isLoading}
-              error={listQuery.isError ? '用户列表加载失败，请稍后重试。' : undefined}
-              onRetry={() => void listQuery.refetch()}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
+              data={crud.data}
+              loading={crud.isLoading}
+              error={crud.error ? '用户列表加载失败，请稍后重试。' : undefined}
+              onRetry={() => void crud.refetch()}
+              onEdit={crud.edit}
+              onDelete={crud.remove}
             />
           </div>
 
@@ -223,11 +192,11 @@ export default function UserListPage() {
       </Card>
 
       <UserFormDialog
-        open={dialogOpen}
-        user={editingUser}
-        submitting={createMutation.isPending || updateMutation.isPending}
-        onOpenChange={setDialogOpen}
-        onSubmit={handleSubmit}
+        open={crud.dialogOpen}
+        user={crud.editingItem}
+        submitting={crud.submitting}
+        onOpenChange={crud.setDialogOpen}
+        onSubmit={crud.submit}
       />
     </div>
   )
