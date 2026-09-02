@@ -1,29 +1,27 @@
 /**
- * [INPUT]: 依赖 Node.js http/https、项目 .env 以及 Swagger 2.0 / OpenAPI 3.x JSON 文档
- * [OUTPUT]: 对外提供 loadSwagger、版本识别、Swagger v2 归一化和 schema 名清洗能力
- * [POS]: script 层的 OpenAPI 读取与兼容层，为 API 代码和文档生成器提供统一输入
+ * [INPUT]: 依赖 Node.js fs/path、项目 .env、命令行参数或 Swagger/OpenAPI JSON 地址
+ * [OUTPUT]: 对外提供 loadSwagger、版本识别、v2/v3 归一化和目录辅助函数
+ * [POS]: script 的 OpenAPI 输入层，为 generate-api.cjs 与 doc.cjs 提供统一 schema
  * [PROTOCOL]: 变更时同步更新此头部，并检查 AGENTS.md 与相关 Skill
  * [TIME]: 2026-09-02 08:40:00
  */
 const fs = require('node:fs')
-const http = require('node:http')
-const https = require('node:https')
 const path = require('node:path')
 
 const PROJECT_ROOT = path.resolve(__dirname, '..')
 const DEFAULT_FILE = path.resolve(__dirname, 'api.json')
 
 const SCHEMA_NAME_MAP = {
-  对象: '',
-  实体: 'Entity',
-  中间数据: 'ExchangeData',
-  分页查询实体类: 'PageQuerySo',
-  字典表实体: 'DictEntity',
-  文件分片对象: 'FileChunk',
+  '文件分片对象': 'FileChunk',
+  '中间数据': 'ExchangeData',
+  '分页查询实体类': 'PageQuery',
+  '字典表实体': 'DictEntity',
+  '快速检测任务响应DTO': 'DetectTaskResponse',
+  '快速检测任务接收DTO': 'DetectTaskRequest',
 }
 
 function ensureDir(dirPath) {
-  if (!fs.existsSync(dirPath)) fs.mkdirSync(dirPath, { recursive: true })
+  fs.mkdirSync(dirPath, { recursive: true })
 }
 
 function ensureDirForFile(filePath) {
@@ -33,39 +31,42 @@ function ensureDirForFile(filePath) {
 function loadEnvFile(filePath) {
   if (!fs.existsSync(filePath)) return
 
-  for (const rawLine of fs.readFileSync(filePath, 'utf-8').split(/\r?\n/)) {
-    const line = rawLine.trim()
-    if (!line || line.startsWith('#')) continue
-    const index = line.indexOf('=')
-    if (index < 0) continue
+  const content = fs.readFileSync(filePath, 'utf-8')
+  for (const line of content.split(/\r?\n/)) {
+    const trimmed = line.trim()
+    if (!trimmed || trimmed.startsWith('#')) continue
 
-    const key = line.slice(0, index).trim()
-    let value = line.slice(index + 1).trim()
+    const equalIndex = trimmed.indexOf('=')
+    if (equalIndex === -1) continue
+
+    const key = trimmed.slice(0, equalIndex).trim()
+    let value = trimmed.slice(equalIndex + 1).trim()
     if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
       value = value.slice(1, -1)
     }
+
     if (process.env[key] === undefined) process.env[key] = value
   }
 }
 
 function loadProjectEnv() {
-  const mode = process.env.NODE_ENV === 'production' ? 'production' : 'development'
-  loadEnvFile(path.join(PROJECT_ROOT, `.env.${mode}`))
   loadEnvFile(path.join(PROJECT_ROOT, '.env'))
+  loadEnvFile(path.join(PROJECT_ROOT, `.env.${process.env.NODE_ENV || 'development'}`))
 }
 
 function parseArgs() {
   loadProjectEnv()
+
   const args = process.argv.slice(2)
   let url = (process.env.SWAGGER_URL || '').trim()
   let file = (process.env.SWAGGER_FILE || '').trim()
 
-  for (let i = 0; i < args.length; i += 1) {
-    const arg = args[i]
-    if (arg === '--url' && args[i + 1]) url = args[++i]
-    else if (arg.startsWith('--url=')) url = arg.slice(6)
-    else if (arg === '--file' && args[i + 1]) file = args[++i]
-    else if (arg.startsWith('--file=')) file = arg.slice(7)
+  for (let index = 0; index < args.length; index += 1) {
+    const arg = args[index]
+    if (arg === '--url' && args[index + 1]) url = args[++index]
+    else if (arg.startsWith('--url=')) url = arg.slice('--url='.length)
+    else if (arg === '--file' && args[index + 1]) file = args[++index]
+    else if (arg.startsWith('--file=')) file = arg.slice('--file='.length)
     else if (!arg.startsWith('-')) {
       if (/^https?:\/\//i.test(arg)) url = arg
       else file = arg
@@ -74,46 +75,8 @@ function parseArgs() {
 
   return {
     url,
-    file: file
-      ? path.isAbsolute(file)
-        ? file
-        : path.resolve(process.cwd(), file)
-      : DEFAULT_FILE,
+    file: file ? path.resolve(process.cwd(), file) : DEFAULT_FILE,
   }
-}
-
-function fetchJson(url, redirectCount = 0) {
-  if (redirectCount > 5) return Promise.reject(new Error('Swagger 重定向次数过多'))
-
-  return new Promise((resolve, reject) => {
-    const client = url.startsWith('https:') ? https : http
-    client
-      .get(url, (response) => {
-        if (response.statusCode >= 300 && response.statusCode < 400 && response.headers.location) {
-          const nextUrl = new URL(response.headers.location, url).toString()
-          response.resume()
-          fetchJson(nextUrl, redirectCount + 1).then(resolve, reject)
-          return
-        }
-        if (response.statusCode !== 200) {
-          response.resume()
-          reject(new Error(`请求 Swagger 失败 (${response.statusCode}): ${url}`))
-          return
-        }
-
-        let body = ''
-        response.setEncoding('utf-8')
-        response.on('data', (chunk) => (body += chunk))
-        response.on('end', () => {
-          try {
-            resolve(JSON.parse(body))
-          } catch {
-            reject(new Error(`Swagger 响应不是有效 JSON: ${url}`))
-          }
-        })
-      })
-      .on('error', reject)
-  })
 }
 
 function detectSwaggerVersion(schema) {
@@ -122,92 +85,113 @@ function detectSwaggerVersion(schema) {
   throw new Error('无法识别 Swagger/OpenAPI 版本，需要 swagger: "2.0" 或 openapi: "3.x"')
 }
 
-function sanitizeTypeName(rawName) {
-  let name = String(rawName || '').trim()
-  let previous = ''
+function toPascalCase(value) {
+  let source = String(value || '').trim()
+  if (SCHEMA_NAME_MAP[source]) return SCHEMA_NAME_MAP[source]
 
-  while (name !== previous && name.includes('«')) {
-    previous = name
-    name = name.replace(/([^«»]+)«([^«»]+)»/g, (_, outer, inner) => `${outer}${sanitizeTypeName(inner)}`)
+  for (const [chinese, english] of Object.entries(SCHEMA_NAME_MAP)) {
+    source = source.split(chinese).join(english)
   }
 
-  for (const [from, to] of Object.entries(SCHEMA_NAME_MAP)) {
-    name = name.split(from).join(to)
-  }
-  name = name.replace(/[^\w$]/g, '')
-  if (!name) name = 'UnknownSchema'
-  if (!/^[A-Za-z_$]/.test(name)) name = `T${name}`
-  return name
+  return source
+    .replace(/对象/g, '')
+    .replace(/实体类?/g, 'Entity')
+    .replace(/«([^«»]+)»/g, ' $1 ')
+    .split(/[^A-Za-z0-9_$]+/)
+    .filter(Boolean)
+    .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+    .join('')
 }
 
-function clone(value) {
-  return JSON.parse(JSON.stringify(value))
+function sanitizeTypeName(rawName) {
+  let name = String(rawName || '')
+
+  // Swagger 2 常见 Result«Page«User对象»»，由内向外展开成合法 TypeScript 名称
+  let previous = ''
+  while (name.includes('«') && previous !== name) {
+    previous = name
+    name = name.replace(/([^«»]+)«([^«»]+)»/g, (_, outer, inner) => `${outer}${toPascalCase(inner)}`)
+  }
+
+  const sanitized = toPascalCase(name) || 'UnknownSchema'
+  return /^[A-Za-z_$]/.test(sanitized) ? sanitized : `T${sanitized}`
+}
+
+function createSchemaNameMap(schemas = {}) {
+  return new Map(Object.keys(schemas).map(name => [name, sanitizeTypeName(name)]))
 }
 
 function rewriteRefs(value, nameMap) {
+  if (Array.isArray(value)) return value.map(item => rewriteRefs(item, nameMap))
   if (!value || typeof value !== 'object') return value
-  if (Array.isArray(value)) return value.map((item) => rewriteRefs(item, nameMap))
 
-  const result = {}
+  const next = {}
   for (const [key, item] of Object.entries(value)) {
     if (key === '$ref' && typeof item === 'string') {
       const match = item.match(/^#\/(?:definitions|components\/schemas)\/(.+)$/)
-      result[key] = match
+      next[key] = match
         ? `#/components/schemas/${nameMap.get(match[1]) || sanitizeTypeName(match[1])}`
         : item
     } else {
-      result[key] = rewriteRefs(item, nameMap)
+      next[key] = rewriteRefs(item, nameMap)
     }
   }
-  return result
+  return next
 }
 
-function normalizeParameter(param) {
-  if (param.in === 'body' || param.schema) return param
-  const schema = {}
-  for (const key of ['type', 'format', 'items', 'enum', '$ref']) {
-    if (param[key] !== undefined) schema[key] = param[key]
+function normalizeV2Parameter(param) {
+  if (param.in === 'body') return param
+  if (param.schema) return param
+
+  return {
+    ...param,
+    schema: {
+      type: param.type || 'string',
+      format: param.format,
+      items: param.items,
+      enum: param.enum,
+    },
   }
-  return { ...param, schema: Object.keys(schema).length ? schema : { type: 'string' } }
 }
 
-function normalizeV2Operation(operation) {
+function normalizeV2Operation(operation = {}) {
   const parameters = []
-  let requestBody = null
+  let requestBody
 
   for (const param of operation.parameters || []) {
     if (param.in === 'body') {
       requestBody = {
         required: param.required !== false,
         description: param.description,
-        content: { 'application/json': { schema: param.schema || { type: 'object' } } },
+        content: {
+          'application/json': { schema: param.schema || { type: 'object' } },
+        },
       }
     } else {
-      parameters.push(normalizeParameter(param))
+      parameters.push(normalizeV2Parameter(param))
     }
   }
 
   const responses = {}
   for (const [code, response] of Object.entries(operation.responses || {})) {
-    responses[code] = response?.schema
-      ? {
-          ...response,
-          content: {
-            'application/json': { schema: response.schema },
-            '*/*': { schema: response.schema },
-          },
-        }
-      : response
-    if (responses[code]?.schema) delete responses[code].schema
+    if (response?.schema) {
+      const { schema, ...rest } = response
+      responses[code] = {
+        ...rest,
+        content: { 'application/json': { schema } },
+      }
+    } else {
+      responses[code] = response
+    }
   }
 
-  return { ...operation, parameters, ...(requestBody ? { requestBody } : {}), responses }
+  return { ...operation, parameters, requestBody, responses }
 }
 
 function normalizeSwaggerV2(raw) {
-  const cloned = clone(raw)
-  const nameMap = new Map(Object.keys(cloned.definitions || {}).map((name) => [name, sanitizeTypeName(name)]))
-  const rewritten = rewriteRefs(cloned, nameMap)
+  const definitions = raw.definitions || {}
+  const nameMap = createSchemaNameMap(definitions)
+  const rewritten = rewriteRefs(raw, nameMap)
   const schemas = {}
 
   for (const [name, schema] of Object.entries(rewritten.definitions || {})) {
@@ -215,12 +199,10 @@ function normalizeSwaggerV2(raw) {
   }
 
   const paths = {}
-  for (const [url, pathItem] of Object.entries(rewritten.paths || {})) {
+  for (const [url, methods] of Object.entries(rewritten.paths || {})) {
     paths[url] = {}
-    for (const [method, operation] of Object.entries(pathItem || {})) {
-      paths[url][method] = method === 'parameters' || method.startsWith('x-')
-        ? operation
-        : normalizeV2Operation(operation)
+    for (const [method, operation] of Object.entries(methods || {})) {
+      paths[url][method] = method === 'parameters' ? operation : normalizeV2Operation(operation)
     }
   }
 
@@ -228,16 +210,14 @@ function normalizeSwaggerV2(raw) {
     openapi: '3.0.0',
     info: rewritten.info || { title: 'API', version: '1.0.0' },
     paths,
-    components: { schemas, securitySchemes: rewritten.securityDefinitions || {} },
-    tags: rewritten.tags || [],
+    components: { schemas },
   }
 }
 
-function normalizeOpenApiV3(raw) {
-  const cloned = clone(raw)
-  const names = Object.keys(cloned.components?.schemas || {})
-  const nameMap = new Map(names.map((name) => [name, sanitizeTypeName(name)]))
-  const rewritten = rewriteRefs(cloned, nameMap)
+function normalizeSwaggerV3(raw) {
+  const originalSchemas = raw.components?.schemas || {}
+  const nameMap = createSchemaNameMap(originalSchemas)
+  const rewritten = rewriteRefs(raw, nameMap)
   const schemas = {}
 
   for (const [name, schema] of Object.entries(rewritten.components?.schemas || {})) {
@@ -250,34 +230,31 @@ function normalizeOpenApiV3(raw) {
   }
 }
 
-function normalizeSwagger(raw) {
-  const version = detectSwaggerVersion(raw)
-  return {
-    version,
-    schema: version === 'v2' ? normalizeSwaggerV2(raw) : normalizeOpenApiV3(raw),
-  }
-}
-
 async function loadSwagger() {
   const { url, file } = parseArgs()
   let rawSchema
 
   if (url) {
-    rawSchema = await fetchJson(url)
-    ensureDirForFile(DEFAULT_FILE)
-    fs.writeFileSync(DEFAULT_FILE, `${JSON.stringify(rawSchema, null, 2)}\n`, 'utf-8')
-    console.log(`🌐 已拉取 Swagger: ${url}`)
+    console.log(`📥 正在拉取 Swagger/OpenAPI: ${url}`)
+    const response = await fetch(url)
+    if (!response.ok) throw new Error(`Swagger 请求失败: ${response.status} ${response.statusText}`)
+
+    rawSchema = await response.json()
+    ensureDirForFile(file)
+    fs.writeFileSync(file, JSON.stringify(rawSchema, null, 2), 'utf-8')
+    console.log(`💾 已缓存: ${path.relative(process.cwd(), file)}`)
   } else {
     if (!fs.existsSync(file)) {
-      throw new Error(`未找到 Swagger 文件: ${file}\n请配置 SWAGGER_URL，或使用 --url / --file`)
+      throw new Error(`未找到 Swagger 文件: ${file}\n请配置 SWAGGER_URL 或使用 --url / --file`)
     }
     rawSchema = JSON.parse(fs.readFileSync(file, 'utf-8'))
-    console.log(`📄 读取本地文档: ${path.relative(process.cwd(), file)}`)
+    console.log(`📄 读取 Swagger: ${path.relative(process.cwd(), file)}`)
   }
 
-  const normalized = normalizeSwagger(rawSchema)
-  console.log(`🔎 识别文档版本: ${normalized.version === 'v2' ? 'Swagger 2.0' : 'OpenAPI 3.x'}`)
-  return { ...normalized, file, rawSchema }
+  const version = detectSwaggerVersion(rawSchema)
+  const schema = version === 'v2' ? normalizeSwaggerV2(rawSchema) : normalizeSwaggerV3(rawSchema)
+  console.log(`🔎 文档版本: ${version === 'v2' ? 'Swagger 2.0' : 'OpenAPI 3.x'}`)
+  return { schema, version, rawSchema, file }
 }
 
 module.exports = {
@@ -286,7 +263,5 @@ module.exports = {
   ensureDir,
   ensureDirForFile,
   loadSwagger,
-  normalizeSwagger,
-  parseArgs,
   sanitizeTypeName,
 }

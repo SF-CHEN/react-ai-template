@@ -10,5 +10,5 @@ coverage
 .vite
 .idea
 
-# Swagger 拉取后的本地缓存，避免把真实接口文档提交到模板仓库
+# Swagger/OpenAPI 本地缓存由 script 自动刷新，不提交真实后端接口快照
 script/api.json

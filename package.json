@@ -5,9 +5,6 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "init": "node script/init-project.cjs",
-    "api:generate": "node script/generate-api.cjs",
-    "api:docs": "node script/doc.cjs",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "lint": "eslint .",
@@ -16,7 +13,10 @@
     "format:check": "prettier --check .",
     "typecheck": "tsc -b --pretty false",
     "test": "vitest",
-    "test:run": "vitest run"
+    "test:run": "vitest run",
+    "api:generate": "node script/generate-api.cjs",
+    "api:docs": "node script/doc.cjs",
+    "init:project": "powershell -ExecutionPolicy Bypass -File script/init-project.ps1"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
