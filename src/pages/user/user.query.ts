@@ -1,10 +1,3 @@
-/**
- * [INPUT]: 依赖 TanStack Query、src/api/user 的 CRUD 函数和用户表单类型
- * [OUTPUT]: 对外提供 userKeys、用户列表 Query Hook 与新增/更新/删除 Mutation Hook
- * [POS]: pages/user 的服务端状态协调层，连接用户页面与 api/user.ts 并负责缓存失效
- * [PROTOCOL]: 变更时同步更新此头部，并检查 AGENTS.md 与相关 Skill
- * [TIME]: 2026-09-01 17:41:04
- */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import {

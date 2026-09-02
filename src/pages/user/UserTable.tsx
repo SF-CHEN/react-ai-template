@@ -1,10 +1,3 @@
-/**
- * [INPUT]: 依赖 TanStack Table、User 模型、formatDateTime 工具及自动导入的 Table/Badge/Button/Lucide 图标
- * [OUTPUT]: 对外提供 UserTable 用户列表表格组件
- * [POS]: pages/user 的页面专用展示组件，由 index.tsx 提供数据和编辑/删除回调
- * [PROTOCOL]: 变更时同步更新此头部，并检查 AGENTS.md 与相关 Skill
- * [TIME]: 2026-09-01 17:41:04
- */
 import { tableFeatures, useTable, type ColumnDef } from '@tanstack/react-table'
 
 import type { User } from '@/api/user'
@@ -14,7 +7,7 @@ interface UserTableProps {
   data: User[]
   loading?: boolean
   onEdit: (user: User) => void
-  onDelete: (user: User) => void
+  onDelete: (user: User) => void | Promise<void>
 }
 
 const features = tableFeatures({})
@@ -66,10 +59,29 @@ export function UserTable({ data, loading = false, onEdit, onDelete }: UserTable
             <IconLucidePencil className="size-3.5" />
             编辑
           </Button>
-          <Button variant="ghost" size="sm" onClick={() => onDelete(row.original)}>
-            <IconLucideTrash2 className="size-3.5" />
-            删除
-          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger render={<Button variant="ghost" size="sm" />}>
+              <IconLucideTrash2 className="size-3.5" />
+              删除
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>确认删除用户？</AlertDialogTitle>
+                <AlertDialogDescription>
+                  将删除用户「{row.original.displayName}」，此操作无法撤销。
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>取消</AlertDialogCancel>
+                <AlertDialogAction
+                  variant="destructive"
+                  onClick={() => void onDelete(row.original)}
+                >
+                  确认删除
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       ),
     },

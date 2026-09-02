@@ -1,10 +1,3 @@
-/**
- * [INPUT]: 依赖 React table 相关属性类型和 cn 类名合并工具
- * [OUTPUT]: 对外提供 Table、TableHeader、TableBody、TableRow、TableHead、TableCell 基础组件
- * [POS]: components/ui 的表格结构封装，被 TanStack Table 等业务表格组合使用
- * [PROTOCOL]: 变更时同步更新此头部，并检查 AGENTS.md 与相关 Skill
- * [TIME]: 2026-09-01 17:41:04
- */
 import type { HTMLAttributes, TableHTMLAttributes, TdHTMLAttributes, ThHTMLAttributes } from 'react'
 
 import { cn } from '@/utils/cn'

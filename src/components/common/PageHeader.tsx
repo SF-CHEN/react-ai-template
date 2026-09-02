@@ -1,10 +1,3 @@
-/**
- * [INPUT]: 依赖 ReactNode 类型与项目全局 Tailwind 主题样式
- * [OUTPUT]: 对外提供 PageHeader 页面标题、描述和操作区组件
- * [POS]: components/common 的跨页面页头组件，被 Dashboard 和业务页面复用
- * [PROTOCOL]: 变更时同步更新此头部，并检查 AGENTS.md 与相关 Skill
- * [TIME]: 2026-09-01 17:41:04
- */
 import type { ReactNode } from 'react'
 
 interface PageHeaderProps {

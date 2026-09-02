@@ -1,19 +1,8 @@
-/**
- * [INPUT]: 依赖 React Router 导航/Outlet、Zustand 应用状态、cn 工具及自动导入的 Button/Lucide 图标
- * [OUTPUT]: 对外提供 AppLayout 中后台主布局组件
- * [POS]: layouts 层的应用骨架，承载侧边导航、顶部栏并为业务路由提供 Outlet
- * [PROTOCOL]: 变更时同步更新此头部，并检查 AGENTS.md 与相关 Skill
- * [TIME]: 2026-09-01 17:41:04
- */
 import { NavLink, Outlet } from 'react-router'
 
+import { navItems } from '@/app/routes'
 import { useAppStore } from '@/store/appStore'
 import { cn } from '@/utils/cn'
-
-const navItems = [
-  { to: '/', label: '工作台', icon: IconLucideLayoutDashboard, end: true },
-  { to: '/users', label: '用户管理', icon: IconLucideUsers },
-]
 
 export function AppLayout() {
   const sidebarCollapsed = useAppStore((state) => state.sidebarCollapsed)

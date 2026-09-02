@@ -1,10 +1,3 @@
-/**
- * [INPUT]: 依赖 class-variance-authority、React button 属性类型和 cn 类名合并工具
- * [OUTPUT]: 对外提供 buttonVariants、ButtonProps 与 Button 基础按钮组件
- * [POS]: components/ui 的基础交互组件，由页面和公共组件通过自动导入复用
- * [PROTOCOL]: 变更时同步更新此头部，并检查 AGENTS.md 与相关 Skill
- * [TIME]: 2026-09-01 17:41:04
- */
 import { cva, type VariantProps } from 'class-variance-authority'
 import type { ButtonHTMLAttributes } from 'react'
 

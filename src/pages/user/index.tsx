@@ -1,10 +1,3 @@
-/**
- * [INPUT]: 依赖 React Router URL 参数、用户 Query/Mutation、用户表格/表单组件及用户类型
- * [OUTPUT]: 对外提供 UserListPage 用户管理路由页面
- * [POS]: pages/user 的页面编排入口，统一协调筛选分页、CRUD 流程和新增/编辑弹窗
- * [PROTOCOL]: 变更时同步更新此头部，并检查 AGENTS.md 与相关 Skill
- * [TIME]: 2026-09-01 17:41:04
- */
 import { useSearchParams } from 'react-router'
 
 import type { User, UserStatus } from '@/api/user'
@@ -12,6 +5,7 @@ import { PageHeader } from '@/components/common/PageHeader'
 
 import { UserFormDialog } from './UserFormDialog'
 import { UserTable } from './UserTable'
+import { userOptions } from './user.options'
 import { useCreateUser, useDeleteUser, useUpdateUser, useUserList } from './user.query'
 import type { UserFormData } from './user.schema'
 
@@ -75,7 +69,6 @@ export default function UserListPage() {
   }
 
   const handleDelete = async (user: User) => {
-    if (!window.confirm(`确认删除用户「${user.displayName}」吗？`)) return
     await deleteMutation.mutateAsync(user.id)
   }
 
@@ -118,13 +111,20 @@ export default function UserListPage() {
               placeholder="搜索用户名、姓名或邮箱"
             />
             <Select
+              items={userOptions.statusFilter}
               value={draftStatus}
-              onChange={(event) => setDraftStatus(event.target.value)}
-              className="lg:w-36"
+              onValueChange={(value) => setDraftStatus(value ?? 'all')}
             >
-              <option value="all">全部状态</option>
-              <option value="enabled">启用</option>
-              <option value="disabled">禁用</option>
+              <SelectTrigger className="lg:w-36">
+                <SelectValue placeholder="全部状态" />
+              </SelectTrigger>
+              <SelectContent>
+                {userOptions.statusFilter.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
             </Select>
             <Button variant="secondary" onClick={handleSearch}>
               <IconLucideSearch className="size-4" />

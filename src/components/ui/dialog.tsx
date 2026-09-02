@@ -1,10 +1,3 @@
-/**
- * [INPUT]: 依赖 Base UI Dialog primitive、React 组件属性类型、cn 工具及自动导入的 IconLucideX
- * [OUTPUT]: 对外提供 Dialog 根节点、触发/关闭能力及 Content/Header/Title/Description/Footer 组合组件
- * [POS]: components/ui 的对话框基础封装，为业务弹窗统一 Portal、遮罩、布局和关闭交互
- * [PROTOCOL]: 变更时同步更新此头部，并检查 AGENTS.md 与相关 Skill
- * [TIME]: 2026-09-01 17:41:04
- */
 import { Dialog as DialogPrimitive } from '@base-ui/react/dialog'
 import type { ComponentProps, HTMLAttributes, ReactNode } from 'react'
 

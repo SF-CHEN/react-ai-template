@@ -2,8 +2,6 @@
  * [INPUT]: 依赖 load-swagger.cjs 的标准化 OpenAPI schema，以及 src/api/request.ts 的 requestData 约定
  * [OUTPUT]: 生成 src/api/generated 下的 API 函数、DTO/参数类型，以及 meta 下的枚举和中文优先下拉选项
  * [POS]: script 的 API 代码生成器，将后端 OpenAPI 描述转换为当前 React 模板可直接使用的 TypeScript API
- * [PROTOCOL]: 变更时同步更新此头部，并检查 AGENTS.md、react-data、typescript 与 code-comments Skill
- * [TIME]: 2026-09-02 02:35:46
  */
 const fs = require('node:fs')
 const path = require('node:path')
@@ -15,18 +13,11 @@ const META_DIR = path.join(OUTPUT_DIR, 'meta')
 const HTTP_METHODS = new Set(['get', 'post', 'put', 'delete', 'patch'])
 const MODULE_PREFIXES = new Set(['api', 'temp', 'v1', 'v2', 'v3'])
 
-function formatTime(date = new Date()) {
-  const pad = value => String(value).padStart(2, '0')
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`
-}
-
 function generatedHeader({ input, output, pos }) {
   return `/**
  * [INPUT]: ${input}
  * [OUTPUT]: ${output}
  * [POS]: ${pos}
- * [PROTOCOL]: 自动生成文件；修改 OpenAPI 或 script 生成器后重新生成，不直接手改
- * [TIME]: ${formatTime()}
  */`
 }
 

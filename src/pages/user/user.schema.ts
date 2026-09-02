@@ -1,10 +1,3 @@
-/**
- * [INPUT]: 依赖 Zod 的字符串、枚举和对象 Schema 校验能力
- * [OUTPUT]: 对外提供 userFormSchema 与由 Schema 推导的 UserFormData 类型
- * [POS]: pages/user 的表单校验契约，由 UserFormDialog 和 user.query.ts 共享
- * [PROTOCOL]: 变更时同步更新此头部，并检查 AGENTS.md 与相关 Skill
- * [TIME]: 2026-09-01 17:41:04
- */
 import { z } from 'zod'
 
 export const userFormSchema = z.object({

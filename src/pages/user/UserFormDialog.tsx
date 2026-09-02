@@ -1,12 +1,5 @@
-/**
- * [INPUT]: 依赖 React Hook Form、Zod Resolver、User 模型、userFormSchema、userOptions 及自动导入的 Dialog/Form UI
- * [OUTPUT]: 对外提供 UserFormDialog 用户新增/编辑表单弹窗组件
- * [POS]: pages/user 的页面专用表单组件，由 index.tsx 控制打开状态并提交用户表单数据
- * [PROTOCOL]: 变更时同步更新此头部，并检查 AGENTS.md 与相关 Skill
- * [TIME]: 2026-09-02 09:45:00
- */
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useForm } from 'react-hook-form'
+import { Controller, useForm } from 'react-hook-form'
 
 import type { User } from '@/api/user'
 
@@ -50,9 +43,7 @@ export function UserFormDialog({
     form.reset(getDefaultValues(user))
   }, [form, open, user])
 
-  const handleSubmit = form.handleSubmit(async (values) => {
-    await onSubmit(values)
-  })
+  const handleSubmit = form.handleSubmit(onSubmit)
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -92,24 +83,58 @@ export function UserFormDialog({
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="grid gap-2">
               <Label htmlFor="role">角色</Label>
-              <Select id="role" {...form.register('role')}>
-                {userOptions.role.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </Select>
+              <Controller
+                control={form.control}
+                name="role"
+                render={({ field }) => (
+                  <Select
+                    items={userOptions.role}
+                    value={field.value}
+                    onValueChange={(value) => {
+                      if (value) field.onChange(value)
+                    }}
+                  >
+                    <SelectTrigger id="role">
+                      <SelectValue placeholder="请选择角色" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {userOptions.role.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
             </div>
 
             <div className="grid gap-2">
               <Label htmlFor="status">状态</Label>
-              <Select id="status" {...form.register('status')}>
-                {userOptions.status.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </Select>
+              <Controller
+                control={form.control}
+                name="status"
+                render={({ field }) => (
+                  <Select
+                    items={userOptions.status}
+                    value={field.value}
+                    onValueChange={(value) => {
+                      if (value) field.onChange(value)
+                    }}
+                  >
+                    <SelectTrigger id="status">
+                      <SelectValue placeholder="请选择状态" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {userOptions.status.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
             </div>
           </div>
         </form>
