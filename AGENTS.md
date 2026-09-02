@@ -38,12 +38,10 @@
 
 ## 3. Skill 路由
 
-遇到对应任务时按需阅读，不要把所有 Skill 机械套到每个任务。
-
 | 场景 | Skill |
 |---|---|
 | 页面、组件、路由、表单、TypeScript、目录调整 | `skills/react-app/SKILL.md` |
-| API、TanStack Query、Zustand、URL 状态、OpenAPI | `skills/react-data/SKILL.md` |
+| API、标准 CRUD、TanStack Query、Zustand、URL 状态、OpenAPI | `skills/react-data/SKILL.md` |
 | 页面视觉、shadcn/ui、交互状态、响应式、可访问性 | `skills/react-ui/SKILL.md` |
 | 网络瀑布、重渲染、大列表、Bundle、昂贵计算 | `skills/react-performance/SKILL.md` |
 
@@ -75,11 +73,11 @@ src/
 - 简单页面保持扁平，不预先创建 `components/hooks/query/types/schema` 多层目录。
 - 页面私有代码优先就近放；真实跨页面复用后再提升到公共目录。
 - 不为了“架构完整”创建只有一个文件的目录。
-- 路由页面与侧边导航的元数据统一从 `src/app/routes.tsx` 获取，避免维护两份路径配置。
+- 路由页面与侧边导航元数据统一从 `src/app/routes.tsx` 获取。
 
-## 5. React 与 TypeScript
+## 5. React、TypeScript 与表单
 
-- 页面入口负责布局、业务流程和组件组合，不把大型表格列、复杂表单和重型图表全部堆进去。
+- 页面入口负责布局、查询条件、业务流程和组件组合，不把大型表格列、复杂表单和重型图表全部堆进去。
 - 派生值直接计算，不使用 `useEffect + useState` 保存第二份状态。
 - 用户交互逻辑优先放事件处理函数。
 - 不机械添加 `memo`、`useMemo`、`useCallback`、`useRef`。
@@ -88,13 +86,16 @@ src/
 - 不直接修改 props 或 state。
 - TypeScript 不使用 `IUser` 这类 `I` 前缀，不机械添加 `Type` / `Interface` 后缀。
 - 禁止用 `any` 绕过类型问题；不确定外部数据先用 `unknown` 再收窄。
-- 表单类型优先由 Zod Schema 使用 `z.infer` 推导。
 - API 直接相关类型和接口放在一起；页面私有类型就近放置；真正跨业务类型才进入 `src/types`。
+- 表单字段与 API 入参一致时，直接复用 API Input 类型；不要再声明一份同结构 `FormData`。
+- Zod Schema 可用 `satisfies z.ZodType<ApiInput>` 保证与接口类型一致；只有表单模型独立于接口 DTO 时才单独 `z.infer`。
+- **表单字段与接口字段一致时必须直接提交整个 `values`，禁止逐字段重新组装 payload。**
+- 只有字段改名、类型转换、过滤、数据清洗或 DTO 结构不一致时才转换；转换优先使用 `{ ...values, changedField: ... }`。
 - 优先使用字面量联合、`as const`、`satisfies`，无明确运行时需求不滥用 `enum`。
 
 详细实现规则见 `skills/react-app/SKILL.md`。
 
-## 6. API 与状态归属
+## 6. API、CRUD 与状态归属
 
 同一份状态只保留一个真实来源：
 
@@ -108,7 +109,10 @@ src/
 
 - Axios 只在 `src/api` 使用，页面和 UI 组件不直接调用 Axios。
 - `src/api/request.ts` 负责 Axios 实例和基础请求能力。
-- 页面业务 Query / Mutation 优先放在页面附近的 `<name>.query.ts`。
+- 标准 CRUD 默认在 `src/api/<name>.ts` 导出一个 `service`，并在页面使用 `useCrud(service, params)`。
+- 标准 CRUD 的 Query Key、列表 Query、新增/编辑/删除 Mutation、缓存刷新和新增/编辑弹窗状态由 `useCrud` 统一处理。
+- **不要为每个普通 CRUD 页面重复创建 `useList / useCreate / useUpdate / useDelete` 四套 Hook。**
+- 只有复杂依赖查询、乐观更新、无限滚动、批量操作、特殊缓存策略或非标准流程时，才在页面附近创建 `<name>.query.ts` 并直接使用 TanStack Query。
 - 不把 Query 数据复制进 Zustand。
 - 不在 `useEffect` 中重新实现 TanStack Query 已提供的请求、缓存、去重和刷新能力。
 - `src/api/generated` 由脚本维护，不直接手改生成文件。
@@ -126,22 +130,22 @@ src/
 - `src/hooks` 下的通用 Hook；
 - Lucide 图标：`IconLucideXxx`。
 
-以下内容保持显式 import：API、页面专用组件、页面 Query、Store、Utils、业务类型、`components/common` 和其他第三方业务库。
+以下内容保持显式 import：API、页面专用组件、特殊 Query、Store、Utils、业务类型、`components/common` 和其他第三方业务库。
 
-`src/components/ui/**` 属于 shadcn/ui 源码区，允许保留官方 `lucide-react` 显式 import；不要为了统一业务侧自动导入写法反复改写 shadcn 源码。
+`src/components/ui/**` 属于 shadcn/ui 源码区，允许保留官方 `lucide-react` 显式 import。
 
 UI 细节见 `skills/react-ui/SKILL.md`。
 
 ## 8. L3 文件头与代码注释
 
-L3 不再覆盖所有源文件，**只用于职责不直观的复杂公共基础设施**，例如：
+L3 只用于职责不直观的复杂公共基础设施，例如：
 
 - `src/api/request.ts` 等请求基础设施；
 - app 层复杂 Router / Provider；
 - ECharts 等命令式第三方库封装；
 - 复杂跨业务公共工具或生成器。
 
-L3 固定精简为：
+格式固定为：
 
 ```ts
 /**
@@ -151,15 +155,7 @@ L3 固定精简为：
  */
 ```
 
-不再维护 `[TIME]` 和 `[PROTOCOL]`。Git 已经负责变更时间与历史。
-
-以下内容默认**不要添加 L3**：
-
-- 普通页面和页面私有组件；
-- `*.query.ts`、`*.schema.ts`、`*.options.ts`；
-- 简单 Store、Hook、Utils；
-- `src/components/ui/**` 的 shadcn/ui 源码；
-- 自动生成声明文件。
+普通页面、页面私有组件、简单 Hook/Utils、`*.query.ts`、`*.schema.ts`、`*.options.ts`、`src/components/ui/**` 和自动生成声明文件默认不加 L3。
 
 正文注释使用简体中文，优先解释多步骤业务流程、状态联动、特殊规则、数据转换、第三方限制、性能取舍和 Why。不要给简单赋值、明显 JSX 和每一行代码写翻译式注释。
 
@@ -191,6 +187,8 @@ pnpm check:deadcode
 - 用 `any` 或大量类型断言掩盖问题；
 - 页面直接调用 Axios；
 - 服务端列表无理由放进 Zustand；
+- 标准 CRUD 页面重复包装四套 Query/Mutation Hook；
+- 表单与接口字段一致却逐字段重新组装提交参数；
 - 可派生状态使用 `useEffect + useState`；
 - 无意义 memo / useMemo / useCallback；
 - 一个简单页面拆出七八层目录；

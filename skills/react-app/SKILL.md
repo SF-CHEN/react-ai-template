@@ -19,7 +19,7 @@ description: 当前 React + TypeScript + Vite 模板的页面、组件、路由�
 | 页面复杂后的组件 | `pages/<name>/components/` |
 | 子页面 | `pages/<name>/<sub-page>/index.tsx` |
 | 表单 Schema | 页面附近 `<name>.schema.ts` |
-| 页面 Query | 页面附近 `<name>.query.ts` |
+| 特殊 Query / Mutation | 页面附近 `<name>.query.ts` |
 | 页面 Options | 页面附近 `<name>.options.ts` |
 | 基础 UI | `src/components/ui` |
 | 跨页面通用组件 | `src/components/common` |
@@ -35,8 +35,9 @@ description: 当前 React + TypeScript + Vite 模板的页面、组件、路由�
 - 页面整体布局；
 - URL 查询条件；
 - 业务流程编排；
-- Dialog / Drawer 状态；
 - 组合页面专用组件。
+
+标准 CRUD 的列表请求、增删改 Mutation、缓存刷新和新增/编辑弹窗状态优先交给 `useCrud`，页面不要重复维护一套。
 
 大型表格列、复杂表单字段或重型图表配置有清晰 UI 边界时再拆出。
 
@@ -71,9 +72,12 @@ description: 当前 React + TypeScript + Vite 模板的页面、组件、路由�
 
 复杂表单统一 React Hook Form + Zod。
 
-- Schema 是约束真实来源时，使用 `z.infer` 推导表单类型。
-- 表单字段与 API 入参一致时直接提交 `values`。
+- 表单字段与 API 入参一致时，优先直接复用 API Input 类型，不再额外声明一份同结构 `FormData`。
+- Schema 可以使用 `satisfies z.ZodType<ApiInput>` 校验与接口类型一致。
+- 只有表单模型本身独立于接口 DTO 时，再使用 `z.infer` 推导独立表单类型。
+- 表单字段与 API 入参一致时直接提交整个 `values`。
 - 只有字段名、格式、过滤规则或 DTO 结构确实不同时才转换。
+- 转换时优先 `{ ...values, changedField: transform(values.changedField) }`，不要重新抄写所有不变字段。
 - shadcn/Base UI 的非原生表单控件优先使用 `Controller` 对接 React Hook Form。
 - 错误信息放在字段附近；服务端错误由当前业务流程或统一请求层处理。
 
@@ -95,7 +99,7 @@ type UserStatus = 'enabled' | 'disabled'
 - 禁止用 `any` 消除错误；外部未知数据用 `unknown` 后收窄。
 - API 相关类型和 API 函数就近放置。
 - 页面私有类型就近定义，跨业务共享后才进入 `src/types`。
-- 不重复定义可从 Zod 或已有 DTO 推导的类型。
+- 不重复定义可从 Zod 或已有 DTO 推导/复用的类型。
 - 优先字面量联合、`as const`、`satisfies`；不机械使用 enum。
 - 泛型只有带来真实复用和推导价值时使用。
 - 能可靠推导时不重复写类型标注，公共边界保持明确。
@@ -109,7 +113,7 @@ type UserStatus = 'enabled' | 'disabled'
 - `src/hooks` 通用 Hook；
 - `IconLucideXxx` 图标。
 
-API、页面组件、Query、Store、Utils、业务类型、`components/common` 和第三方业务库保持显式 import。
+API、页面组件、特殊 Query、Store、Utils、业务类型、`components/common` 和第三方业务库保持显式 import。
 
 ## L3 与注释
 
@@ -123,8 +127,10 @@ API、页面组件、Query、Store、Utils、业务类型、`components/common` 
 
 - 文件是否放在最接近所有者的位置？
 - 是否为了“整齐”创建了没必要的目录或类型？
+- 标准 CRUD 是否优先复用了 `useCrud`？
+- 表单和 API 入参一致时是否直接复用了类型并提交整个 values？
+- 是否存在逐字段重复组装 payload？
 - 路由和菜单是否来自同一份配置？
 - 是否存在重复 state 或可派生 state？
-- 表单类型是否重复手写？
 - 是否优先复用了现有 UI / Hook / 工具？
 - 简单文件是否被机械加了 L3 或无意义注释？
