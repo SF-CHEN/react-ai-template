@@ -93,7 +93,7 @@ AI 可以主动进行：
 ## 3. 技术栈
 
 - React + TypeScript + Vite
-- shadcn/ui 风格源码组件 + Base UI
+- shadcn/ui 源码组件 + Base UI
 - Tailwind CSS
 - React Router
 - TanStack Query
@@ -104,9 +104,12 @@ AI 可以主动进行：
 - ECharts
 - Day.js
 - unplugin-auto-import
-- unplugin-icons + Lucide Iconify 图标集
+- unplugin-icons + Lucide Iconify 图标集（业务代码自动导入）
+- lucide-react（shadcn/ui 源码兼容）
 - ESLint + Prettier
 - Vitest
+
+`@iconify-json/lucide` 与 `lucide-react` 职责不同：前者服务业务代码的 `IconLucideXxx` 自动导入，后者只为 shadcn/ui 官方源码保持兼容，不视为重复 UI 技术栈。
 
 没有明确需求时，不引入职责重复的第二套库。
 
@@ -157,6 +160,8 @@ src/
 
 - `pages/<name>/index.tsx` 负责页面布局、业务流程和组件组合。
 - 页面专用组件优先放当前页面目录。
+- 基础 UI 优先使用 shadcn/ui 已有组件源码；shadcn/ui 已提供同类组件时，不重复手写另一套 Button、Dialog、Select、Dropdown 等基础组件。
+- `src/components/ui/**` 视为 shadcn/ui 基础组件源码区；通过 shadcn CLI 新增或同步组件时，优先保留官方组件结构和依赖写法。
 - 组件只承担一个主要职责，但不按固定行数机械拆分。
 - Render 阶段保持纯净，不直接修改 props 或 state。
 - Hook 只能在顶层调用。
@@ -175,9 +180,9 @@ src/
 - React 常用 API，例如 `useState`、`useEffect`、`useMemo`；
 - `src/components/ui` 下基础 UI 组件；
 - `src/hooks` 下跨页面通用 Hook；
-- Lucide 图标，统一写成 `IconLucideXxx`。
+- 业务代码中的 Lucide 图标，统一写成 `IconLucideXxx`。
 
-例如：
+例如业务页面：
 
 ```tsx
 <Button>
@@ -186,12 +191,20 @@ src/
 </Button>
 ```
 
-不要生成：
+业务代码不要生成：
 
 ```tsx
 import { Button } from '@/components/ui/button'
 import { Plus } from 'lucide-react'
 ```
+
+**shadcn/ui 组件源码例外：** `src/components/ui/**` 中由 shadcn CLI 生成、同步或按官方源码维护的组件，允许保留 `lucide-react` 显式 import，例如：
+
+```tsx
+import { CheckIcon, ChevronDownIcon } from 'lucide-react'
+```
+
+不要为了统一业务侧自动导入写法，把 shadcn/ui 源码中的 `lucide-react` 强制改成 `IconLucideXxx`；这样可以保持 shadcn CLI 后续新增和更新组件时的兼容性。
 
 以下内容保持显式 import：
 
@@ -354,7 +367,7 @@ JSDoc 不要求覆盖每个函数；公共 Hook、公共工具、重要公共组
 - 每行代码都生成翻译式废话注释；
 - 新增手写源文件却缺少 L3 文件头；
 - L3 内容与实际代码不一致或修改后不刷新 `[TIME]`；
-- `lucide-react` 显式 import；
+- 业务页面、`components/common`、`layouts` 等业务代码显式 import `lucide-react`；`src/components/ui/**` 的 shadcn/ui 源码例外；
 - 未经用户明确要求主动运行 typecheck/lint/test/build。
 
 ## 17. 完成前静态检查
@@ -365,6 +378,7 @@ JSDoc 不要求覆盖每个函数；公共 Hook、公共工具、重要公共组
 - API 与状态归属正确；
 - 没有重复类型和明显未解析 import；
 - 自动导入规则正确；
+- shadcn/ui 源码中的 `lucide-react` import 没有被无意义改写；
 - 手写源文件包含准确的 L3 文件头；
 - 复杂逻辑有必要的中文注释；
 - Git diff 只包含当前任务相关修改。

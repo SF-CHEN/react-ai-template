@@ -5,7 +5,7 @@
 ## 技术栈
 
 - React + TypeScript + Vite
-- shadcn/ui 风格源码组件 + Base UI
+- shadcn/ui 源码组件 + Base UI
 - Tailwind CSS
 - React Router
 - TanStack Query
@@ -16,7 +16,8 @@
 - ECharts
 - Day.js
 - unplugin-auto-import
-- unplugin-icons + Lucide Iconify 图标集
+- unplugin-icons + Lucide Iconify 图标集（业务代码自动导入）
+- lucide-react（shadcn/ui 源码兼容）
 - ESLint + Prettier
 - Vitest
 
@@ -36,7 +37,7 @@ src/
 ├── components/
 │   ├── charts/
 │   ├── common/
-│   └── ui/
+│   └── ui/              shadcn/ui 基础组件源码
 ├── pages/
 ├── layouts/
 ├── hooks/
@@ -79,11 +80,11 @@ Vite 会按当前 mode 自动合并配置，mode 文件覆盖 `.env` 中的同�
 
 `*.local` 已加入 `.gitignore`。模板不再保留 `.env.example`。
 
-## 自动导入
+## 自动导入与 shadcn/ui 图标规则
 
 项目使用 `unplugin-auto-import` 和 `unplugin-icons`。
 
-默认可以直接使用：
+业务代码默认可以直接使用：
 
 ```text
 React 常用 API
@@ -91,6 +92,23 @@ src/components/ui 下的基础 UI 组件
 src/hooks 下的通用 Hook
 Lucide 图标（IconLucideXxx）
 ```
+
+例如业务页面：
+
+```tsx
+<Button>
+  <IconLucidePlus className="size-4" />
+  新增用户
+</Button>
+```
+
+`src/components/ui/**` 属于 shadcn/ui 基础组件源码区，允许保留 shadcn CLI 生成的官方 `lucide-react` 显式 import，例如：
+
+```tsx
+import { CheckIcon, ChevronDownIcon, ChevronUpIcon } from 'lucide-react'
+```
+
+不要为了统一业务侧的 `IconLucideXxx` 写法反复修改 shadcn/ui 源码。这样后续通过 shadcn CLI 新增或同步组件时，不需要再次手工处理图标 import。
 
 业务 API、页面组件、业务 Query、Store、Utils、业务类型和 `components/common` 保持显式 import。
 
@@ -166,7 +184,7 @@ src/api/generated/
 - `enums.ts`、`options.ts` 和 `api.md` 统一放 `meta/`，集中存放生成辅助信息。
 - `options.ts` 的 `label` 优先使用 `script/option-label-overrides.cjs` 的人工覆盖；没有覆盖时再读取 Swagger/OpenAPI 自带中文枚举说明、明确的 `ENUM-中文说明` 映射或数量一致的中文顺序列表；仍无法确定时回退英文说明或 enum 原值。
 - `value` 始终保持后端真实 enum 值，不因为展示中文而修改。
-- 如果自动生成 label 不准确，不直接修改 `src/api/generated/meta/options.ts`，而是修改 `script/option-label-overrides.cjs`；第一层 key 与最终导出的 `xxxOptions` 变量名完全一致，该文件不会被 `api:generate` 或 `api:all` 覆盖。
+- 如果自动生成 label 不准确，不直接修改 `src/api/generated/meta/options.ts`，而是修改 `script/option-label-overrides.cjs`；该文件不会被 `api:generate` 或 `api:all` 覆盖。
 - API 请求统一调用 `src/api/request.ts` 的 `requestData<T>()`。
 - generated API、类型和常量自动带 L3 文件头，并在每次生成时刷新 `[TIME]`。
 - generated 目录由脚本维护；需要业务语义封装时，在 `src/api/*.ts` 新建手写文件。
@@ -175,32 +193,6 @@ src/api/generated/
 更详细的生成和 label 覆盖说明见 `script/README.md`。
 
 使用 pnpm 时同样可以执行 `pnpm api:generate`、`pnpm api:docs`、`pnpm api:all`。
-
-## Options 组织
-
-Options 按来源分层：
-
-```text
-后端 enum
-→ src/api/generated/meta/options.ts
-
-后端中文 label 自动生成错误
-→ script/option-label-overrides.cjs
-
-页面自己的前端固定选项
-→ src/pages/<page>/<page>.options.ts
-```
-
-页面推荐通过页面级聚合对象统一消费，例如：
-
-```ts
-userOptions.role
-userOptions.sex
-```
-
-不要默认创建全项目巨大的 `options.userRole / options.userSex / ...` 对象。只有某组选项被多个无直接关系的页面真实复用后，再提升到 `src/options/`。
-
-详细说明见 `docs/options.md`。
 
 ## 项目初始化脚本
 
@@ -253,7 +245,6 @@ pnpm build
 - React、UI 基础组件和 Lucide 图标自动导入示例
 - URL 搜索、筛选、分页状态示例
 - 路由级懒加载示例
-- 页面级 `userOptions` 聚合示例
 
 用户接口目前使用内存 Mock。接入真实后端时可以继续保留手写 `src/api/user.ts`，也可以通过 `src/api/generated` 调用自动生成接口。
 
@@ -262,7 +253,7 @@ pnpm build
 ```text
 skills/
 ├── react-project/       页面、组件、表单、目录结构
-├── react-data/          API、TanStack Query、Zustand、URL 状态、Options
+├── react-data/          API、TanStack Query、Zustand、URL 状态
 ├── typescript/          TypeScript 类型、DTO、Zod、泛型
 ├── code-comments/       L3 文件头、中文注释、业务流程、Why
 └── react-performance/   React 性能优化
@@ -273,6 +264,5 @@ skills/
 - `AGENTS.md`：项目长期强制约定
 - `docs/architecture.md`：目录设计说明
 - `docs/ai-development.md`：AI 开发提示词和 Skill 路由
-- `docs/options.md`：生成 options、人工 label 覆盖与页面固定 options 的组织方式
 
 项目文档、代码注释和 Git 提交说明默认使用中文。

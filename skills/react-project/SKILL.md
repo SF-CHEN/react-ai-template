@@ -58,6 +58,17 @@ pages/user/
 
 不适合拆组件：只有几行 JSX、只为了减少文件行数、拆出后必须传大量零碎 props、组件名字难以描述真实职责。
 
+## 基础 UI 与 shadcn/ui
+
+基础 UI 优先使用 shadcn/ui 已有组件源码，不为 Button、Dialog、Select、Dropdown 等已有能力重复维护另一套实现。
+
+`src/components/ui/**` 是 shadcn/ui 基础组件源码区：
+
+- 通过 shadcn CLI 新增或同步组件时，优先保留官方组件结构；
+- shadcn/ui 源码允许显式 `import { XxxIcon } from 'lucide-react'`；
+- 不为了业务侧的图标自动导入规则，把 shadcn 源码中的 `lucide-react` 改成 `IconLucideXxx`；
+- 只有 shadcn/ui 没有合适能力或项目确实需要业务封装时，才新增自定义基础/公共组件。
+
 ## React 规则
 
 - 派生值直接计算，不使用 `useEffect` 同步第二份 state。
@@ -73,12 +84,23 @@ pages/user/
 
 ## 自动导入
 
-以下直接使用，不手写 import：
+业务代码中以下内容直接使用，不手写 import：
 
 - React 常用 API；
 - `components/ui` 基础组件；
 - `src/hooks` 通用 Hook；
 - Lucide 图标：`IconLucideXxx`。
+
+例如页面代码：
+
+```tsx
+<Button>
+  <IconLucidePlus className="size-4" />
+  新增
+</Button>
+```
+
+`src/components/ui/**` 的 shadcn/ui 源码是例外，允许保留官方 `lucide-react` 显式 import。
 
 业务 API、业务 Query、页面组件、Store、Utils、业务类型和 `components/common` 保持显式 import。
 
@@ -95,7 +117,7 @@ pages/user/
 1. 先阅读 `AGENTS.md` 和目标页面附近现有文件。
 2. 识别关键假设；存在影响实现方向的歧义时先说明。
 3. 判断这是简单页面还是已经进入复杂页面阶段。
-4. 先复用现有 UI、Hook、工具和技术栈。
+4. 先复用现有 shadcn/ui、Hook、工具和技术栈。
 5. 创建最少必要文件，不添加需求之外的功能和扩展点。
 6. 为新建手写源文件填写真实 L3 文件头。
 7. 业务流程优先写清楚，再考虑抽象。
