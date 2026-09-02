@@ -5,6 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "init": "node script/init-project.cjs",
+    "api:generate": "node script/generate-api.cjs",
+    "api:docs": "node script/doc.cjs",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "lint": "eslint .",

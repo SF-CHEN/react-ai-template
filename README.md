@@ -29,6 +29,7 @@
 ```text
 src/
 ├── api/
+│   └── generated/     Swagger / OpenAPI 自动生成代码
 ├── app/
 ├── components/
 │   ├── charts/
@@ -59,6 +60,59 @@ Lucide 图标（IconLucideXxx）
 ```
 
 业务 API、页面组件、业务 Query、Store、Utils、业务类型和 `components/common` 保持显式 import。
+
+## Swagger / OpenAPI API 生成
+
+模板内置 Swagger 2.0 / OpenAPI 3.x 生成脚本：
+
+```text
+script/
+├── load-swagger.cjs
+├── generate-api.cjs
+├── doc.cjs
+└── init-project.cjs
+```
+
+在 `.env` 配置：
+
+```bash
+SWAGGER_URL=http://localhost:8080/v3/api-docs
+```
+
+或者临时传入：
+
+```bash
+pnpm api:generate -- --url=http://localhost:8080/v3/api-docs
+pnpm api:docs -- --file=./openapi.json
+```
+
+生成结果统一进入：
+
+```text
+src/api/generated/
+├── <module>.ts
+├── <module>.types.ts
+├── enums.ts
+├── options.ts
+└── api.md
+```
+
+生成 API 统一调用 `src/api/request.ts` 的 `requestData<T>()`，因此 TanStack Query 可以直接拿到响应体数据。
+
+`src/api/generated` 属于脚本维护区域：完全生成的 `.types.ts` 不手改；带 `<generated>` 标记的文件只在 `</generated>` 后写自定义代码。生成文件豁免 L3 头部，手写 API 仍遵循项目 L3 规范。
+
+脚本从 URL 拉取的 Swagger 会缓存到 `script/api.json`，该文件已加入 `.gitignore`，避免把真实接口文档提交到模板仓库。
+
+## 项目初始化
+
+从模板创建新项目后，可以根据当前文件夹名更新 package 名称，并可指定页面标题：
+
+```bash
+pnpm init
+pnpm init -- --title="安全评测平台"
+```
+
+初始化脚本只修改项目名和现有标题，不创建额外业务结构。
 
 ## L3 文件头与代码注释
 
@@ -121,14 +175,14 @@ pnpm build
 - URL 搜索、筛选、分页状态示例
 - 路由级懒加载示例
 
-用户接口目前使用内存 Mock，方便模板在没有后端时展示完整流程。接入真实后端时替换 `src/api/user.ts` 即可。
+用户接口目前使用内存 Mock，方便模板在没有后端时展示完整流程。接入真实后端时可以使用手写 `src/api/*.ts`，也可以通过 Swagger/OpenAPI 生成到 `src/api/generated/`。
 
 ## AI 开发规范
 
 ```text
 skills/
 ├── react-project/       页面、组件、表单、目录结构
-├── react-data/          API、TanStack Query、Zustand、URL 状态
+├── react-data/          API、Swagger、TanStack Query、Zustand、URL 状态
 ├── typescript/          TypeScript 类型、DTO、Zod、泛型
 ├── code-comments/       L3 文件头、中文注释、业务流程、Why
 └── react-performance/   React 性能优化

@@ -9,3 +9,6 @@ dist-ssr
 coverage
 .vite
 .idea
+
+# Swagger 拉取后的本地缓存，避免把真实接口文档提交到模板仓库
+script/api.json

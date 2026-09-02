@@ -1,6 +1,6 @@
 ---
 name: react-data
-description: 当前模板的数据访问和状态管理规范。编写 API、TanStack Query、Mutation、Zustand、搜索筛选分页或缓存逻辑时使用。
+description: 当前模板的数据访问和状态管理规范。编写 API、TanStack Query、Mutation、Zustand、搜索筛选分页、Swagger 生成代码或缓存逻辑时使用。
 ---
 
 # React 数据与状态 Skill
@@ -25,25 +25,78 @@ description: 当前模板的数据访问和状态管理规范。编写 API、Tan
 src/api/
 ├── request.ts
 ├── user.ts
-└── report.ts
+├── report.ts
+└── generated/        Swagger / OpenAPI 自动生成代码
 ```
 
 页面不要直接调用 Axios。
 
+手写 API 直接相关的请求和响应类型可以和接口函数放在同一个文件，避免为了类型再创建一层目录。
+
 ```ts
-// src/api/user.ts
 export interface UserListParams {
   page: number
   pageSize: number
   keyword?: string
 }
 
-export function getUserList(params: UserListParams) {
-  return request.get('/users', { params })
+export async function getUserList(params: UserListParams) {
+  return requestData<UserListResult>({
+    url: '/users',
+    method: 'GET',
+    params,
+  })
 }
 ```
 
-API 直接相关的请求和响应类型可以和接口函数放在同一个文件，避免为了类型再创建一层目录。
+`request` 是原始 Axios 实例；业务 API 和生成 API 优先使用 `requestData<T>()`，直接获得响应体，避免页面和 Query 再处理 `AxiosResponse<T>`。
+
+## Swagger / OpenAPI 自动生成
+
+项目内置：
+
+```text
+script/
+├── load-swagger.cjs
+├── generate-api.cjs
+├── doc.cjs
+└── init-project.cjs
+```
+
+生成命令：
+
+```bash
+pnpm api:generate
+pnpm api:docs
+```
+
+Swagger 来源按优先级支持：
+
+- 命令行 `--url` / `--file`；
+- `.env` 中的 `SWAGGER_URL` / `SWAGGER_FILE`；
+- 本地缓存 `script/api.json`。
+
+生成结果统一放：
+
+```text
+src/api/generated/
+├── <module>.ts
+├── <module>.types.ts
+├── enums.ts
+├── options.ts
+└── api.md
+```
+
+这里是**生成代码专用例外**：为了隔离脚本产物，允许 API 与类型拆成 `<module>.ts + <module>.types.ts`，不要把这套结构机械应用到手写 API。
+
+规则：
+
+- `src/api/generated` 由脚本维护，不把生成文件复制到 `pages`。
+- 完全生成的 `.types.ts` 不手改。
+- 带 `<generated>` 标记的文件只在 `</generated>` 后的自定义区域写人工扩展。
+- 生成文件属于 L3 豁免范围；手写 API 仍必须维护 L3。
+- `script/api.json` 是本地 Swagger 缓存，不提交真实接口文档到模板仓库。
+- 页面和 Query 使用生成 API 时仍保持显式 import。
 
 ## TanStack Query
 
@@ -161,3 +214,5 @@ const [roles, permissions] = await Promise.all([
 - Mutation 是否正确失效缓存？
 - 搜索/筛选/分页是否存在多份状态？
 - 是否用 `useEffect` 手工实现了 Query 已经提供的能力？
+- 生成代码是否只位于 `src/api/generated`？
+- 是否误改了完全生成的 `.types.ts`？
